@@ -42,7 +42,7 @@ fi
 echo "HEAD $(git rev-parse --short HEAD) $(git log -1 --format=%s)"
 
 NPMRC_TMP=""
-cleanup() { [ -n "$NPMRC_TMP" ] && rm -f "$NPMRC_TMP"; }
+cleanup() { if [ -n "$NPMRC_TMP" ]; then rm -f "$NPMRC_TMP"; fi; }
 trap cleanup EXIT
 if [ -n "${NPM_TOKEN:-}" ]; then
   NPMRC_TMP="$(mktemp)"
