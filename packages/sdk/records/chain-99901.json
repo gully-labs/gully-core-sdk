@@ -1,0 +1,31 @@
+{
+  "$comment": "Facts about Kinetiq Elysium (Arbitrum Orbit L3 on HyperEVM, HYPE native) that the deployment record does not hold, read on chain on 2026-11-09 after the release-3 record (the public deployment record) landed. RPC: https://rpc.elysium.kinetiq.xyz, Kinetiq's own, only. Explorer https://scan.elysp.com has no API. Core contract addresses never go here: they come from gully-core-99901.json.",
+  "key": "elysium",
+  "name": "Kinetiq Elysium",
+  "explorer": "https://scan.elysp.com",
+  "isMainnet": true,
+  "deployedAtBlock": "2834807",
+  "deployedAtBlockSource": "The Vault's creation transaction 0xa62862f0e0d41cb604ed9f43c4cce35ea9b35edcab5d1f44648543c55c4cfedf (release run broadcast 01_DeployVault run-latest, receipt read on chain: status 1, the Vault's OwnershipTransferred and CreateX ContractCreation logs), block 2834807. The RPC keeps no archive state, so eth_getCode bisection was not possible; Sourcify holds no creation data for it.",
+  "nativeCurrency": {
+    "name": "HYPE",
+    "symbol": "HYPE",
+    "decimals": 18
+  },
+  "contractBlockClock": "parent-l1",
+  "contractBlockTimeCentis": 99,
+  "contractBlockTimeSource": "Arbitrum Nitro: blocks carry l1BlockNumber (HyperEVM), so NUMBER in the EVM is the HyperEVM block: 4,913 parent blocks over 4,838 s (0.985 s) while the L3 made 50,000 blocks (0.097 s), 2026-11-09. Multicall3 getBlockNumber() returned the parent block too.",
+  "nativeValueTransfers": true,
+  "quoteTokenSource": "None: pools quote in the native coin (nativeValueTransfers true), so the record names no quote ERC-20 (defaultQuote returns native).",
+  "tokens": [],
+  "wethToken": {
+    "symbol": "WETH",
+    "name": "Wrapped Ether",
+    "decimals": 18,
+    "isTestToken": false
+  },
+  "wethTokenSource": "Records only, never shipped (the generated book takes wethToken alone): the router argument and native quote; the contract at the deployment record's reused weth9 is a WETH9 that reports symbol() WETH and name() Wrapped Ether on chain (read 2026-11-09), so the book shows what the chain says. Readers see the Gully Core app lib/tokenNote.ts: \"WETH on Kinetiq Elysium wraps HYPE, the chain's native coin. 1 WETH = 1 HYPE.\"",
+  "reused": {
+    "multicall3": "0xcA11bde05977b3631167028862bE2a173976CA11"
+  },
+  "reusedSource": "Multicall3 at its canonical address: eth_getCode returned a 3,808-byte runtime (Robinhood, Base and BNB hold 3,813 bytes) and aggregate3([WETH.symbol()]) answered success with the symbol on 2026-11-09. The deployment record does not list it because Gully Core did not deploy it."
+}

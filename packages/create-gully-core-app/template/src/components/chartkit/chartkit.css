@@ -1,0 +1,679 @@
+/* SPDX-License-Identifier: MIT */
+/* ============================================================================
+   THE CHART KIT, as this template carries it.
+
+   A copy of Gully Core's shared chart kit (Motion + d3-scale/d3-shape; MIT), the
+   one set of charts every data screen in this app draws. The kit's chrome is
+   written against the Gully Core design tokens (--ink, --muted, --line, --track,
+   --trench, --well, --mid, --accent-ink, the dc-* primitives); this block maps
+   every one of them onto the `--brand-*` custom properties `src/theme.ts`
+   sets from gullycore.config.ts, so a colour edit there restyles the charts
+   too and no stylesheet in this project hardcodes a colour. The DATA colours
+   (series slots, up/down) stay the kit's validated set: brand chrome is yours,
+   data encoding is not a brand decision.
+   ========================================================================== */
+:root {
+  --ink: var(--brand-text);
+  --muted: var(--brand-text-muted);
+  --line: var(--brand-border);
+  --line2: var(--brand-border);
+  --track: var(--brand-surface-alt);
+  --trench: var(--brand-surface);
+  --well: var(--brand-surface-alt);
+  --mid: var(--brand-surface);
+  --accent-ink: var(--brand-accent);
+  --up-ink: var(--brand-positive);
+  --bad-ink: var(--brand-negative);
+  --dc-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dc-font-display: var(--brand-heading);
+  --dc-font-body: var(--brand-font);
+  --dc-font-mono: var(--brand-mono);
+  /* `rgb(var(--trench-rgb) / a)` needs channels; a brand surface is a hex, so the
+     card ground is the surface itself and the alpha is dropped (see .ck-card). */
+}
+
+/* ============================================================================
+   CHART KIT — the one set of chart styles (2026-10-11: Motion +
+   d3-scale/d3-shape).
+
+   Chrome comes from the design handoff (dc.css: --trench, --line, --track,
+   --ink, --muted, the .dc-state / .dc-skeleton / .dc-seg / .dc-tooltip
+   primitives). DATA colours are the kit's own, validated with the dataviz
+   validator against both card surfaces (dark #1a1f1e, light #ffffff):
+
+     categorical, adjacent pairs (stacks, rings, two-line charts)
+       light  #138155 #eb6834 #1baf7a #eda100   CVD ΔE ≥ 9.1, normal ≥ 22.9
+       dark   #00c878 #d95926 #199e70 #c98500   CVD ΔE ≥ 8.4, normal ≥ 19.8
+       light slots 3 and 4 sit under 3:1 on white: the relief rule applies —
+       every multi-series chart ships its legend AND its table view.
+     polarity (buys / sells, gain / loss)
+       #1f9e89 / #e4572e in both themes          CVD ΔE 12.8, normal 27.8
+
+   The handoff's "data 2" (#d0d5da / #667875) FAILS the validator beside the
+   blue (light: normal-vision ΔE 8.1, below the 15 floor; dark: chroma below
+   the floor), so it is not a series colour here.
+
+   Text never wears a series colour: values, labels and legends use --ink /
+   --muted; a swatch or line key beside them carries identity.
+   ========================================================================== */
+:root {
+  --ck-s1: light-dark(#138155, #00c878);
+  --ck-s2: light-dark(#eb6834, #d95926);
+  --ck-s3: light-dark(#1baf7a, #199e70);
+  --ck-s4: light-dark(#eda100, #c98500);
+  --ck-up: #1f9e89;
+  --ck-down: #e4572e;
+  --ck-grid: var(--line2, #0f1b18);
+  --ck-axis: var(--muted, #8fa09c);
+  --ck-surface: var(--trench, #1a1f1e);
+  --ck-h: 220px;
+}
+
+/* ---- the even grid: KPI row, then equal chart cards (3 / 2 / 1 columns) ---- */
+.ck-grid {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.ck-grid__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.ck-grid__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+@container (max-width: 1099px) {
+  .ck-grid__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (max-width: 600px) {
+  .ck-grid__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ck-grid__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---- the card every chart sits in ---- */
+.ck-card {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  box-sizing: border-box;
+  background: var(--brand-surface);
+  border: 1px solid var(--line, #353f3d);
+  border-radius: 16px;
+  color: var(--ink, #d0d5da);
+  font-family: var(--dc-font-body, Inter, sans-serif);
+  line-height: normal;
+}
+.ck-card *,
+.ck-card *::before,
+.ck-card *::after {
+  box-sizing: border-box;
+}
+.ck-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 38px;
+}
+.ck-card__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ck-card__title {
+  margin: 0;
+  font: 600 16px var(--dc-font-display, Inter, sans-serif);
+  color: var(--ink, #d0d5da);
+}
+.ck-card__sub {
+  font: 400 11px var(--dc-font-mono, monospace);
+  letter-spacing: 0.08em;
+  color: var(--muted, #8fa09c);
+}
+.ck-card__controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ck-card .dc-seg > button {
+  height: 30px;
+  min-width: 44px;
+}
+.ck-card__body {
+  position: relative;
+  height: var(--ck-h);
+  min-width: 0;
+}
+.ck-card__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+.ck-prov {
+  margin: 0;
+  font: 400 11px var(--dc-font-mono, monospace);
+  color: var(--muted, #8fa09c);
+  overflow-wrap: anywhere;
+}
+.ck-card .dc-state,
+.ck-card .dc-skeleton {
+  height: 100%;
+  text-align: center;
+  padding: 12px;
+}
+
+/* ---- legend: rect keys for areas/bars/segments, line keys for lines ---- */
+.ck-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 11px var(--dc-font-mono, monospace);
+  color: var(--muted, #8fa09c);
+}
+.ck-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ck-legend b {
+  font-weight: 500;
+  color: var(--ink, #d0d5da);
+}
+.ck-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.ck-key--line {
+  height: 2px;
+  width: 14px;
+  border-radius: 1px;
+}
+
+/* ---- the plot: a focusable figure that owns crosshair, tooltip and keys ---- */
+.ck-plot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  border-radius: 10px;
+  touch-action: pan-y;
+}
+.ck-plot:focus-visible {
+  outline: 2px solid #2cf29a;
+  outline-offset: 3px;
+}
+.ck-plot svg {
+  display: block;
+  overflow: visible;
+}
+.ck-axis text,
+.ck-axis-label {
+  font: 400 10px var(--dc-font-mono, monospace);
+  fill: var(--ck-axis);
+}
+.ck-gridline {
+  stroke: var(--ck-grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.ck-baseline {
+  stroke: var(--line, #353f3d);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.ck-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.ck-area {
+  stroke: none;
+  opacity: 0.1;
+}
+.ck-cross {
+  stroke: var(--muted, #8fa09c);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+  pointer-events: none;
+}
+.ck-dot {
+  stroke: var(--ck-surface);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.ck-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+.ck-mark {
+  transition: opacity 0.15s;
+}
+.ck-plot[data-active="true"] .ck-mark[data-on="false"] {
+  opacity: 0.45;
+}
+.ck-now {
+  stroke: var(--accent-ink, #2cf29a);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.ck-now-label {
+  font: 500 10px var(--dc-font-mono, monospace);
+  letter-spacing: 0.1em;
+  fill: var(--accent-ink, #2cf29a);
+}
+
+/* ---- tooltip: values lead, labels follow; line keys ---- */
+.ck-tip {
+  position: absolute;
+  top: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  color: var(--ink, #d0d5da);
+}
+.ck-tip__head {
+  color: var(--muted, #8fa09c);
+  font-size: 11px;
+}
+.ck-tip__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ck-tip__row b {
+  font-weight: 500;
+  color: var(--ink, #d0d5da);
+}
+.ck-tip__row span {
+  color: var(--muted, #8fa09c);
+}
+
+/* ---- table view: the accessible view of the same rows ---- */
+.ck-table-wrap {
+  height: 100%;
+  overflow: auto;
+  border: 1px solid var(--line, #353f3d);
+  border-radius: 10px;
+}
+.ck-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 12px var(--dc-font-mono, monospace);
+  color: var(--ink, #d0d5da);
+}
+.ck-table th {
+  position: sticky;
+  top: 0;
+  background: var(--trench, #1a1f1e);
+  color: var(--muted, #8fa09c);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line, #353f3d);
+  white-space: nowrap;
+}
+.ck-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line2, #0f1b18);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ck-table [data-align="end"] {
+  text-align: right;
+}
+
+/* ---- bar list: ranked rows with a share track ---- */
+.ck-barlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  overflow: auto;
+  outline: none;
+}
+.ck-barlist:focus-visible {
+  outline: 2px solid #2cf29a;
+  outline-offset: 3px;
+}
+.ck-barlist__row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-areas: "rank label value" ". track track";
+  gap: 5px 8px;
+  align-items: center;
+  font: 400 12px var(--dc-font-mono, monospace);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.ck-barlist__row[data-on="true"] {
+  background: rgb(0 200 120 / 0.06);
+}
+.ck-barlist__rank {
+  grid-area: rank;
+  color: var(--muted, #8fa09c);
+}
+.ck-barlist__label {
+  grid-area: label;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink, #d0d5da);
+}
+.ck-barlist__label a {
+  color: inherit;
+  text-decoration: none;
+}
+.ck-barlist__label a:hover {
+  color: var(--accent-ink, #2cf29a);
+}
+.ck-barlist__value {
+  grid-area: value;
+  color: var(--ink, #d0d5da);
+  font-variant-numeric: tabular-nums;
+}
+.ck-barlist__value small {
+  color: var(--muted, #8fa09c);
+  margin-left: 6px;
+  font-size: 11px;
+}
+.ck-barlist__track {
+  grid-area: track;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--track, #101d1a);
+  overflow: hidden;
+}
+.ck-barlist__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ck-s1);
+  transform-origin: 0 50%;
+}
+
+/* ---- range band ---- */
+.ck-range__status {
+  font: 500 11px var(--dc-font-mono, monospace);
+  letter-spacing: 0.1em;
+  fill: var(--ink, #d0d5da);
+}
+
+/* ---- KPI tile (dc.css .dc-kpi carries the box) ---- */
+.ck-kpi {
+  min-width: 0;
+  text-decoration: none;
+  color: var(--ink, #d0d5da);
+  transition:
+    transform 0.2s var(--dc-ease, ease),
+    border-color 0.2s;
+}
+a.ck-kpi:hover {
+  transform: translateY(-2px);
+  border-color: rgb(44 242 154 / 0.5);
+}
+a.ck-kpi:focus-visible {
+  outline: 2px solid #2cf29a;
+  outline-offset: 3px;
+}
+/* A link tile keeps ink (the app's `.dc a` rule would paint the figure link-blue). */
+a.ck-kpi.ck-kpi,
+a.ck-kpi.ck-kpi:hover {
+  color: var(--ink, #d0d5da);
+}
+/* A figure is never truncated: on a narrow tile the sparkline wraps under it instead. */
+.ck-kpi .dc-kpi__row {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.ck-kpi .dc-kpi__value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 0;
+}
+.ck-kpi__delta {
+  font: 500 11px var(--dc-font-mono, monospace);
+}
+.ck-kpi__delta[data-dir="up"] {
+  color: var(--up-ink, #5fd3be);
+}
+.ck-kpi__delta[data-dir="down"] {
+  color: var(--bad-ink, #f07b5a);
+}
+.ck-kpi__delta[data-dir="flat"] {
+  color: var(--muted, #8fa09c);
+}
+.ck-kpi__skel {
+  display: inline-block;
+  width: 6ch;
+  height: 26px;
+  border-radius: 4px;
+  background: var(--track, #101d1a);
+  animation: dc-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.ck-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Every motion off under reduced motion, whatever drives it (Motion is also told through
+   MotionConfig reducedMotion="user" and the kit's own useReducedMotion). */
+@media (prefers-reduced-motion: reduce) {
+  .ck-card *,
+  .ck-grid *,
+  .ck-kpi,
+  .ck-kpi * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
+/* ---- the dc-* primitives the kit draws its states, tabs, tooltips and KPI tiles with ---- */
+.dc-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--well);
+}
+.dc-seg > button {
+  min-width: 48px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--dc-font-mono);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dc-seg > button[aria-checked="true"] {
+  background: var(--mid);
+  color: var(--accent-ink);
+  box-shadow: inset 0 0 0 1px var(--brand-accent);
+}
+.dc-tooltip {
+  padding: 8px 10px;
+  background: var(--trench);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font: 400 12px var(--dc-font-mono);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.dc-tooltip--above {
+  position: absolute;
+  top: -8px;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 5;
+}
+/* The four honest states of every chart: skeleton, error, coming soon, and the chart's own empty. */
+.dc-state {
+  height: var(--dc-state-h, 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  color: var(--ink);
+}
+.dc-state__h {
+  font: 600 20px var(--dc-font-display);
+}
+.dc-state__s {
+  font-size: 13px;
+  color: var(--muted);
+}
+.dc-state--error {
+  border: 1px solid var(--brand-negative);
+  gap: 10px;
+}
+.dc-state--error .dc-state__s {
+  font: 400 11px var(--dc-font-mono);
+}
+.dc-state--soon .dc-state__k {
+  font: 400 11px var(--dc-font-mono);
+  letter-spacing: 0.14em;
+  color: var(--accent-ink);
+}
+.dc-skeleton {
+  height: var(--dc-state-h, 160px);
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--trench);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.dc-skeleton > span {
+  flex: 1;
+  background: var(--track);
+  border-radius: 2px;
+}
+.dc-skeleton--pulse > span {
+  animation: dc-pulse 1.2s ease-in-out infinite alternate;
+}
+.dc-skeleton--pulse > span:nth-child(2) { animation-delay: 0.15s; }
+.dc-skeleton--pulse > span:nth-child(3) { animation-delay: 0.3s; }
+.dc-skeleton--pulse > span:nth-child(4) { animation-delay: 0.45s; }
+.dc-skeleton--pulse > span:nth-child(5) { animation-delay: 0.6s; }
+.dc-skeleton--pulse > span:nth-child(6) { animation-delay: 0.75s; }
+.dc-skeleton--pulse > span:nth-child(7) { animation-delay: 0.9s; }
+.dc-skeleton--pulse > span:nth-child(8) { animation-delay: 1.05s; }
+.dc-skeleton--pulse > span:nth-child(9) { animation-delay: 1.2s; }
+.dc-skeleton--pulse > span:nth-child(10) { animation-delay: 1.35s; }
+.dc-skeleton--pulse > span:nth-child(11) { animation-delay: 1.5s; }
+.dc-skeleton--pulse > span:nth-child(12) { animation-delay: 1.65s; }
+@keyframes dc-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+.dc-retry {
+  height: 32px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font: 500 11px var(--dc-font-mono);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+/* KPI tile + sparkline. */
+.dc-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: var(--brand-radius, 12px);
+  color: var(--ink);
+  text-decoration: none;
+}
+.dc-kpi__label {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dc-kpi__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dc-kpi__value {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+}
+.dc-kpi__spark {
+  width: 90px;
+  height: 26px;
+  flex: none;
+}
+.dc-kpi__caption {
+  font-family: var(--dc-font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-skeleton--pulse > span {
+    animation: none;
+  }
+}

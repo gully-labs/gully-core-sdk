@@ -1,0 +1,31 @@
+{
+  "$comment": "Facts about BNB Chain that the deployment record does not hold, read on chain (bsc-dataseed.bnbchain.org) on 2026-11-09. Core contract addresses never go here: they come from gully-core-56.json.",
+  "key": "bnb",
+  "name": "BNB Chain",
+  "explorer": "https://bscscan.com",
+  "isMainnet": true,
+  "deployedAtBlock": "132456409",
+  "deployedAtBlockSource": "The Vault's creation transaction 0xa5f723e1\u2026f5c9 (Sourcify deployment record), block 132456409.",
+  "nativeCurrency": {
+    "name": "BNB",
+    "symbol": "BNB",
+    "decimals": 18
+  },
+  "contractBlockClock": "native",
+  "contractBlockTimeCentis": 45,
+  "contractBlockTimeSource": "50,000 blocks in 22,506 s (0.45 s), 2026-11-09. NUMBER equals eth_blockNumber.",
+  "nativeValueTransfers": true,
+  "quoteTokenSource": "None: pools quote in the native coin (nativeValueTransfers true), so the record names no quote ERC-20 (defaultQuote returns native).",
+  "tokens": [],
+  "wethToken": {
+    "symbol": "WBNB",
+    "name": "Wrapped BNB",
+    "decimals": 18,
+    "isTestToken": false,
+    "note": "Router argument and native quote."
+  },
+  "reused": {
+    "multicall3": "0xcA11bde05977b3631167028862bE2a173976CA11"
+  },
+  "reusedSource": "Multicall3 at its canonical address; eth_getCode returned the same 3,813-byte runtime on Robinhood, Base and BNB, 2026-11-09. The deployment record does not list it because Gully Core did not deploy it."
+}

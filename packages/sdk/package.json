@@ -1,0 +1,247 @@
+{
+  "name": "@gullylabs/core-sdk",
+  "version": "0.3.0",
+  "description": "MIT TypeScript SDK for Gully Core on Anubis, Robinhood Chain, Base, BNB Chain, Kinetiq Elysium and Gully Chain Testnet: the deployed contract address book, pool key/id derivation, hook permission bitmaps, typed events, quotes and the Gully Core registry. Build hooks without importing GPL Solidity.",
+  "license": "MIT",
+  "homepage": "https://docs.gullycore.xyz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gully-labs/gully-core-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/gully-labs/gully-core-sdk/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./events": {
+      "import": {
+        "types": "./dist/events/index.d.ts",
+        "default": "./dist/events/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/events/index.d.ts",
+        "default": "./dist/cjs/events/index.js"
+      }
+    },
+    "./indexer": {
+      "import": {
+        "types": "./dist/indexer/index.d.ts",
+        "default": "./dist/indexer/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/indexer/index.d.ts",
+        "default": "./dist/cjs/indexer/index.js"
+      }
+    },
+    "./deployments": {
+      "import": {
+        "types": "./dist/deployments/index.d.ts",
+        "default": "./dist/deployments/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/deployments/index.d.ts",
+        "default": "./dist/cjs/deployments/index.js"
+      }
+    },
+    "./safe": {
+      "import": {
+        "types": "./dist/safe/index.d.ts",
+        "default": "./dist/safe/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/safe/index.d.ts",
+        "default": "./dist/cjs/safe/index.js"
+      }
+    },
+    "./registry": {
+      "import": {
+        "types": "./dist/registry/index.d.ts",
+        "default": "./dist/registry/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/registry/index.d.ts",
+        "default": "./dist/cjs/registry/index.js"
+      }
+    },
+    "./launchpad": {
+      "import": {
+        "types": "./dist/launchpad/index.d.ts",
+        "default": "./dist/launchpad/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/launchpad/index.d.ts",
+        "default": "./dist/cjs/launchpad/index.js"
+      }
+    },
+    "./split": {
+      "import": {
+        "types": "./dist/split/index.d.ts",
+        "default": "./dist/split/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/split/index.d.ts",
+        "default": "./dist/cjs/split/index.js"
+      }
+    },
+    "./lock": {
+      "import": {
+        "types": "./dist/lock/index.d.ts",
+        "default": "./dist/lock/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/lock/index.d.ts",
+        "default": "./dist/cjs/lock/index.js"
+      }
+    },
+    "./price": {
+      "import": {
+        "types": "./dist/price/index.d.ts",
+        "default": "./dist/price/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/price/index.d.ts",
+        "default": "./dist/cjs/price/index.js"
+      }
+    },
+    "./trust": {
+      "import": {
+        "types": "./dist/trust/index.d.ts",
+        "default": "./dist/trust/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/trust/index.d.ts",
+        "default": "./dist/cjs/trust/index.js"
+      }
+    },
+    "./drop": {
+      "import": {
+        "types": "./dist/drop/index.d.ts",
+        "default": "./dist/drop/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/drop/index.d.ts",
+        "default": "./dist/cjs/drop/index.js"
+      }
+    },
+    "./trading": {
+      "import": {
+        "types": "./dist/trading/index.d.ts",
+        "default": "./dist/trading/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/trading/index.d.ts",
+        "default": "./dist/cjs/trading/index.js"
+      }
+    },
+    "./orders": {
+      "import": {
+        "types": "./dist/orders/index.d.ts",
+        "default": "./dist/orders/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/orders/index.d.ts",
+        "default": "./dist/cjs/orders/index.js"
+      }
+    },
+    "./vaults": {
+      "import": {
+        "types": "./dist/vaults/index.d.ts",
+        "default": "./dist/vaults/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/vaults/index.d.ts",
+        "default": "./dist/cjs/vaults/index.js"
+      }
+    },
+    "./router": {
+      "import": {
+        "types": "./dist/router/index.d.ts",
+        "default": "./dist/router/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/router/index.d.ts",
+        "default": "./dist/cjs/router/index.js"
+      }
+    },
+    "./schema.graphql": "./schema.graphql",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "prompts",
+    "schema.graphql",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "generate": "npm run generate:deployments && npm run generate:events && npm run generate:launchpad && npm run generate:registry && npm run generate:trading",
+    "generate:events": "node scripts/generate-events.mjs",
+    "generate:launchpad": "node scripts/generate-launchpad-abi.mjs",
+    "generate:registry": "node scripts/generate-registry-abi.mjs",
+    "generate:trading": "node scripts/generate-trading-abi.mjs",
+    "generate:stockfeeds": "node scripts/generate-stock-feeds.mjs",
+    "generate:deployments": "node scripts/generate-deployments.mjs",
+    "generate:check": "node scripts/generate-deployments.mjs --check && node scripts/generate-events.mjs --check && node scripts/generate-launchpad-abi.mjs --check && node scripts/generate-registry-abi.mjs --check && node scripts/generate-trading-abi.mjs --check",
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-marker.mjs",
+    "build:generate": "npm run generate && npm run build:ci",
+    "build:ci": "tsc -p tsconfig.build.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-marker.mjs",
+    "prepack": "npm run clean && npm run build:ci",
+    "prepublishOnly": "npm run generate:check && npm run build && npm test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "generate:nativefeeds": "node scripts/generate-native-feeds.mjs",
+    "sync-check": "node scripts/sync-check.mjs"
+  },
+  "keywords": [
+    "gullycore",
+    "amm",
+    "hooks",
+    "defi",
+    "ethereum",
+    "sdk",
+    "typescript",
+    "viem",
+    "concentrated-liquidity",
+    "dex",
+    "launchpad",
+    "gully-chain",
+    "anubis"
+  ],
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "blockstore-core": "^7.0.1",
+    "ipfs-unixfs-importer": "^17.1.1",
+    "multiformats": "^14.0.5",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "author": "Gully Labs (https://gullylabs.xyz)"
+}

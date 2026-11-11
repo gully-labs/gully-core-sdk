@@ -1,0 +1,72 @@
+{
+  "name": "@gullylabs/create-core-app",
+  "version": "0.3.0",
+  "description": "The Gully Core app template: scaffold a DEX, a Launchpad or both on Gully Core's shared core. npm create @gullylabs/core-app. MIT, one config file, no core deployment.",
+  "license": "MIT",
+  "homepage": "https://docs.gullycore.xyz",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "type": "module",
+  "bin": {
+    "create-app": "./dist/bin/create-app.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-template.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "test:template": "node scripts/test-template.mjs"
+  },
+  "keywords": [
+    "gullycore",
+    "gullycore",
+    "create",
+    "dex",
+    "launchpad",
+    "amm",
+    "hooks",
+    "white-label",
+    "template",
+    "scaffold",
+    "react",
+    "vite"
+  ],
+  "devDependencies": {
+    "@gullylabs/core-sdk": "workspace:*",
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0",
+    "viem": "^2.56.3",
+    "vitest": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gully-labs/gully-core-sdk.git",
+    "directory": "packages/create-gully-core-app"
+  },
+  "bugs": {
+    "url": "https://github.com/gully-labs/gully-core-sdk/issues"
+  },
+  "author": "Gully Labs (https://gullylabs.xyz)"
+}

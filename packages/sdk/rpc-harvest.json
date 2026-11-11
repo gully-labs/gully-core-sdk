@@ -1,0 +1,333 @@
+{
+  "source": "https://chainid.network/chains.json",
+  "fetchedAt": "2026-09-19T23:19:18.644Z",
+  "cached": true,
+  "chains": {
+    "ethereum": {
+      "chainId": 1,
+      "listedAs": [
+        "Ethereum Mainnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://api.mycryptoapi.com/eth",
+        "https://cloudflare-eth.com",
+        "https://ethereum-rpc.publicnode.com",
+        "https://mainnet.gateway.tenderly.co",
+        "https://rpc.blocknative.com/boost",
+        "https://rpc.flashbots.net",
+        "https://rpc.flashbots.net/fast",
+        "https://rpc.mevblocker.io",
+        "https://rpc.mevblocker.io/fast",
+        "https://rpc.mevblocker.io/noreverts",
+        "https://rpc.mevblocker.io/fullprivacy",
+        "https://eth.drpc.org",
+        "https://api.securerpc.com/v1",
+        "https://xrpc.cl/eth"
+      ],
+      "rejected": [
+        {
+          "url": "https://mainnet.infura.io/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://mainnet.infura.io/ws/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://ethereum-rpc.publicnode.com/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://mainnet.gateway.tenderly.co/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://eth.drpc.org/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "base": {
+      "chainId": 8453,
+      "listedAs": [
+        "Base"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://mainnet.base.org",
+        "https://developer-access-mainnet.base.org",
+        "https://base.gateway.tenderly.co",
+        "https://base-rpc.publicnode.com",
+        "https://rpcfree.com/base-rpc",
+        "https://rpc.baseazul.dev",
+        "https://rpc.satelink.network/rpc/base",
+        "https://xrpc.cl/base"
+      ],
+      "rejected": [
+        {
+          "url": "wss://base.gateway.tenderly.co/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://base-rpc.publicnode.com/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "bsc": {
+      "chainId": 56,
+      "listedAs": [
+        "BNB Smart Chain Mainnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://bsc-dataseed1.bnbchain.org",
+        "https://bsc-dataseed2.bnbchain.org",
+        "https://bsc-dataseed3.bnbchain.org",
+        "https://bsc-dataseed4.bnbchain.org",
+        "https://bsc-dataseed1.defibit.io",
+        "https://bsc-dataseed2.defibit.io",
+        "https://bsc-dataseed3.defibit.io",
+        "https://bsc-dataseed4.defibit.io",
+        "https://bsc-dataseed1.ninicoin.io",
+        "https://bsc-dataseed2.ninicoin.io",
+        "https://bsc-dataseed3.ninicoin.io",
+        "https://bsc-dataseed4.ninicoin.io",
+        "https://bsc-rpc.publicnode.com",
+        "https://bsc-rpc-public.chainpulse.cc",
+        "https://xrpc.cl/bsc"
+      ],
+      "rejected": [
+        {
+          "url": "wss://bsc-rpc.publicnode.com/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://bsc-ws-node.nariox.org/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "robinhood": {
+      "chainId": 4663,
+      "listedAs": [
+        "Robinhood Chain"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.mainnet.chain.robinhood.com",
+        "https://robinhood-rpc.publicnode.com",
+        "https://rpc.arrowrpc.com",
+        "https://rpc.ordofi.network"
+      ],
+      "rejected": [
+        {
+          "url": "wss://robinhood-rpc.publicnode.com/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://rpc.ordofi.network/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "linea": {
+      "chainId": 59144,
+      "listedAs": [
+        "Linea"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.linea.build",
+        "https://linea-rpc.publicnode.com"
+      ],
+      "rejected": [
+        {
+          "url": "wss://rpc.linea.build/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "https://linea-mainnet.infura.io/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://linea-mainnet.infura.io/ws/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://linea-rpc.publicnode.com/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "ink": {
+      "chainId": 57073,
+      "listedAs": [
+        "Ink"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc-gel.inkonchain.com",
+        "https://rpc-qnd.inkonchain.com"
+      ],
+      "rejected": [
+        {
+          "url": "wss://rpc-gel.inkonchain.com/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://rpc-qnd.inkonchain.com/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "xlayer": {
+      "chainId": 196,
+      "listedAs": [
+        "X Layer Mainnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.xlayer.tech",
+        "https://xlayerrpc.okx.com"
+      ],
+      "rejected": []
+    },
+    "hyperevm": {
+      "chainId": 999,
+      "skipped": "chains.json id 999 is Wanchain Testnet; HyperEVM mainnet is absent from the file",
+      "fresh": [],
+      "rejected": [],
+      "duplicate": []
+    },
+    "monad": {
+      "chainId": 143,
+      "listedAs": [
+        "Monad"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.monad.xyz"
+      ],
+      "rejected": []
+    },
+    "plasma": {
+      "chainId": 9745,
+      "listedAs": [
+        "Plasma Mainnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.plasma.to"
+      ],
+      "rejected": []
+    },
+    "stable": {
+      "chainId": 988,
+      "listedAs": [
+        "Stable Mainnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.stable.xyz"
+      ],
+      "rejected": []
+    },
+    "arc": {
+      "chainId": 5042,
+      "listedAs": [
+        "Arc"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.mainnet.arc.io",
+        "https://rpc.blockdaemon.mainnet.arc.io",
+        "https://rpc.drpc.mainnet.arc.io",
+        "https://rpc.quicknode.mainnet.arc.io",
+        "https://rpc.beamrpc.com"
+      ],
+      "rejected": [
+        {
+          "url": "wss://rpc.beamrpc.com/",
+          "why": "websocket transport"
+        }
+      ]
+    },
+    "sepolia": {
+      "chainId": 11155111,
+      "listedAs": [
+        "Ethereum Sepolia"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.sepolia.org",
+        "https://rpc2.sepolia.org",
+        "https://rpc.sepolia.ethpandaops.io",
+        "https://sepolia.gateway.tenderly.co",
+        "https://ethereum-sepolia-rpc.publicnode.com",
+        "https://sepolia.drpc.org",
+        "https://xrpc.cl/sepolia"
+      ],
+      "rejected": [
+        {
+          "url": "https://sepolia.infura.io/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://sepolia.infura.io/v3/$%7BINFURA_API_KEY%7D",
+          "why": "key placeholder"
+        },
+        {
+          "url": "wss://sepolia.gateway.tenderly.co/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://ethereum-sepolia-rpc.publicnode.com/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://sepolia.drpc.org/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "https://eth-sepolia.g.alchemy.com/v2/%3Credacted:32%3E",
+          "why": "opaque path segment — an embedded api key"
+        }
+      ]
+    },
+    "stableTestnet": {
+      "chainId": 2201,
+      "listedAs": [
+        "Stable Testnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.testnet.stable.xyz"
+      ],
+      "rejected": []
+    },
+    "arcTestnet": {
+      "chainId": 5042002,
+      "listedAs": [
+        "Arc Network Testnet"
+      ],
+      "fresh": [],
+      "duplicate": [
+        "https://rpc.testnet.arc.network",
+        "https://rpc.quicknode.testnet.arc.network",
+        "https://rpc.blockdaemon.testnet.arc.network"
+      ],
+      "rejected": [
+        {
+          "url": "wss://rpc.testnet.arc.network/",
+          "why": "websocket transport"
+        },
+        {
+          "url": "wss://rpc.quicknode.testnet.arc.network/",
+          "why": "websocket transport"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "gully-core-sdk",
+  "private": true,
+  "description": "Gully Core SDK, CLI and app template (public mirror; see README.md).",
+  "license": "MIT",
+  "packageManager": "pnpm@10.20.0",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "pnpm -r --workspace-concurrency=1 run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 run test",
+    "sync-check": "pnpm --filter @gullylabs/core-sdk run sync-check",
+    "smoke": "node scripts/smoke-pack.mjs",
+    "publish:dry": "bash scripts/publish.sh --dry-run"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

@@ -1,0 +1,216 @@
+#!/usr/bin/env node
+// SPDX-License-Identifier: MIT
+/* Writes src/deployments/generated/chain<id>.ts from a Gully Core deployment record.
+
+     records/gully-core-<id>.json   byte copy of deployments/<id>.json in the public gully-labs/gully-core repo
+                                    (https://github.com/gully-labs/gully-core). Never edited here; scripts/sync-check.mjs
+                                    fails when it differs from that repo or from https://gullycore.xyz/manifest.json.
+     records/chain-<id>.json        what the record does not hold (names, block numbers, tokens). No contract address.
+
+   A contract the book has a slot for and the record lacks stops the run, and so does a record entry
+   this file does not know: a new contract needs a decision, never a silent gap. `--check` writes nothing
+   and fails when a generated file differs from what the record gives. */
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const recordsDir = join(root, "records");
+const outDir = join(root, "src", "deployments", "generated");
+
+/* Book field -> record contract. test/deploymentRecords.test.ts reads the same two maps. */
+export const TOP_LEVEL = {
+  vault: "vault",
+  clPoolManager: "clPoolManager",
+  binPoolManager: "binPoolManager",
+  clPoolManagerOwner: "clPoolManagerOwner",
+  binPoolManagerOwner: "binPoolManagerOwner",
+  feeController: "feeControllerV5",
+  governanceSafe: "governanceSafe",
+  registry: "registry",
+  universalRouter: "universalRouter",
+  fillRouter: "fillRouter",
+  clPositionManager: "clPositionManager",
+  binPositionManager: "binPositionManager",
+  clQuoter: "clQuoter",
+  binQuoter: "binQuoter",
+  mixedQuoter: "mixedQuoter",
+  clPositionDescriptor: "clPositionDescriptor",
+  create3Factory: "createX",
+  permit2: "permit2",
+  multicall3: "multicall3",
+  revShareHook: "revShareHook",
+  launchRegistry: "launchRegistry",
+  launchAndBuy: "launchAndBuy",
+  dynamicFeeHook: "dynamicFeeHook",
+  binDynamicFeeHook: "binDynamicFeeHook",
+  lpRewardsHook: "liquidityRewardsHook",
+  oracleHook: "oracleHook",
+  dexHook: "dexHook",
+  splitFactory: "splitFactory",
+  positionLock: "positionLock",
+  tokenLock: "tokenLock",
+  multisend: "multisend",
+  dropFactory: "dropFactory",
+  rangeOrders: "rangeOrders",
+  dca: "dca",
+  vaultFactory: "vaultFactory",
+  tunerGate: "tunerGate",
+};
+export const KIT = {
+  launchpadKitV2: "launchpadKitV2",
+  launchLegs: "launchLegs",
+  launchTokenFactory: "launchTokenFactory",
+  clLPLocker: "lpLocker",
+  binLPLocker: "binLpLocker",
+  clLaunchGuardHook: "launchGuardHook",
+  binLaunchGuardHook: "binLaunchGuardHook",
+  padFactory: "padFactory",
+};
+/* In the record, with no slot in the book. Listed so a NEW record entry stops the run. */
+const NOT_IN_BOOK = new Set(["clTickLens", "launchPolicy", "managedVaultImplementation", "padImplementation"]);
+
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const ZERO = /^0x0{40}$/;
+
+function address(value, what) {
+  if (typeof value !== "string" || !ADDRESS.test(value) || ZERO.test(value)) throw new Error(`${what}: not an address: ${value}`);
+  return value;
+}
+
+function render(record, chain, id) {
+  if (record.chainId !== id) throw new Error(`record says chain ${record.chainId}, file says ${id}`);
+  /* The public record lists broadcast deployments only; every contract in it must be source-verified on Sourcify. */
+  const unverified = Object.entries(record.contracts).filter(([, v]) => v.sourcify !== "match" && v.sourcify !== "exact_match").map(([k]) => k);
+  if (unverified.length > 0) throw new Error(`not source-verified on Sourcify: ${unverified.join(", ")}`);
+  /* A contract the deployment REUSED (CreateX already on Robinhood, Base and BNB) is in `reused`, not `contracts`. */
+  const c = (name) => address(record.contracts[name]?.address ?? record.reused?.[name] ?? chain.reused?.[name], record.contracts[name] ? `contracts.${name}` : `contracts.${name} or reused.${name}`);
+  const known = new Set([...Object.values(TOP_LEVEL), ...Object.values(KIT), ...NOT_IN_BOOK]);
+  const unknown = Object.keys(record.contracts).filter((k) => !known.has(k));
+  if (unknown.length > 0) throw new Error(`record entries with no decision in this script: ${unknown.join(", ")}`);
+
+  const weth = address(record.reused["weth9"], "reused[weth9]");
+  const q = (v) => JSON.stringify(v);
+  const row = (k, v) => `  ${k}: ${q(v)},`;
+  const addr = (k) => row(k, c(TOP_LEVEL[k]));
+  const token = (t) => {
+    const note = t.note === undefined ? "" : `, note: ${q(t.note)}`;
+    return `    { address: ${q(address(t.address, t.symbol))}, symbol: ${q(t.symbol)}, name: ${q(t.name)}, decimals: ${t.decimals}, isTestToken: ${t.isTestToken}${note} },`;
+  };
+  const lines = [
+    "// SPDX-License-Identifier: MIT",
+    `/* GENERATED by scripts/generate-deployments.mjs from records/gully-core-${id}.json (${record.product} ${record.version},`,
+    `   release ${record.launchRelease}, deployed ${record.deployedAt}) and records/chain-${id}.json. Do not edit. */`,
+    'import { SAFE_CONTRACTS } from "../safe.js";',
+    "",
+    `export const CHAIN_${id} = {`,
+    row("chainId", id),
+    row("key", chain.key),
+    row("name", chain.name),
+    row("explorer", chain.explorer),
+    row("isMainnet", chain.isMainnet),
+    `  deployedAtBlock: ${BigInt(chain.deployedAtBlock)}n,`,
+    `  nativeCurrency: ${q(chain.nativeCurrency)},`,
+    row("nativeValueTransfers", chain.nativeValueTransfers),
+    /* absent where pools quote in the native coin (defaultQuote then returns native) */
+    ...(chain.quoteToken === undefined ? [] : [row("quoteToken", address(chain.quoteToken, "quoteToken"))]),
+    row("contractBlockClock", chain.contractBlockClock),
+    row("contractBlockTimeCentis", chain.contractBlockTimeCentis),
+    addr("vault"),
+    addr("clPoolManager"),
+    addr("binPoolManager"),
+    addr("clPoolManagerOwner"),
+    addr("binPoolManagerOwner"),
+    addr("feeController"),
+    "  feeControllerHasGuardian: false,",
+    "  clProtocolFeeController: null,",
+    "  binProtocolFeeController: null,",
+    addr("governanceSafe"),
+    "  timelockCustody: null,",
+    "  timelockPolicy: null,",
+    `  safe: SAFE_CONTRACTS[${id}]!,`,
+    addr("registry"),
+    addr("universalRouter"),
+    addr("fillRouter"),
+    addr("clPositionManager"),
+    addr("binPositionManager"),
+    addr("clQuoter"),
+    addr("binQuoter"),
+    addr("mixedQuoter"),
+    addr("clPositionDescriptor"),
+    addr("create3Factory"),
+    addr("permit2"),
+    addr("multicall3"),
+    row("weth", weth),
+    addr("revShareHook"),
+    addr("launchRegistry"),
+    "  launchpadKit: null,",
+    "  launchGuardHook: null,",
+    "  launchpadV2: {",
+    ...Object.entries(KIT).map(([k, name]) => `    ${k}: ${q(c(name))},`),
+    "  },",
+    "  launchpadV2Retired: [],",
+    addr("launchAndBuy"),
+    addr("dynamicFeeHook"),
+    addr("binDynamicFeeHook"),
+    addr("splitFactory"),
+    addr("positionLock"),
+    addr("tokenLock"),
+    addr("multisend"),
+    addr("dropFactory"),
+    addr("rangeOrders"),
+    addr("dca"),
+    addr("lpRewardsHook"),
+    addr("oracleHook"),
+    addr("dexHook"),
+    addr("tunerGate"),
+    addr("vaultFactory"),
+    "  rwa: {",
+    "    marketHoursHook: null,",
+    "    stockPairHook: null,",
+    "    chainlinkPriceBandAdapter: null,",
+    "    allowlistComplianceOracle: null,",
+    "    chainlinkCrossPriceBandAdapter: null,",
+    "    chainlinkScaledSharePriceBandAdapter: null,",
+    "  },",
+    '  durationClocks: { revShareHook: "timestamp", launchpadKit: null, launchGuardHook: null },',
+    "  revShareHooks: [",
+    `    { address: ${q(c("revShareHook"))}, durationClock: "timestamp", pendingShape: "timestamp-with-expiry", status: "current", note: ${q(`First deployment (${record.deployedAt}).`)} },`,
+    "  ],",
+    "  tokens: [",
+    ...chain.tokens.map(token),
+    token({ ...chain.wethToken, address: weth }),
+    "  ],",
+    "} as const;",
+    "",
+  ];
+  return lines.join("\n");
+}
+
+function main() {
+  const check = process.argv.includes("--check");
+  const ids = readdirSync(recordsDir)
+    .map((f) => /^chain-(\d+)\.json$/.exec(f)?.[1])
+    .filter((id) => id !== undefined)
+    .map(Number);
+  let stale = 0;
+  for (const id of ids) {
+    const record = JSON.parse(readFileSync(join(recordsDir, `gully-core-${id}.json`), "utf8"));
+    const chain = JSON.parse(readFileSync(join(recordsDir, `chain-${id}.json`), "utf8"));
+    const out = render(record, chain, id);
+    const file = join(outDir, `chain${id}.ts`);
+    if (check) {
+      if (!existsSync(file) || readFileSync(file, "utf8") !== out) {
+        console.error(`${file} is not what records/gully-core-${id}.json gives. Run npm run generate:deployments.`);
+        stale += 1;
+      }
+      continue;
+    }
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(file, out);
+    console.log(`wrote ${file}`);
+  }
+  if (stale > 0) process.exit(1);
+}
+
+if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) main();

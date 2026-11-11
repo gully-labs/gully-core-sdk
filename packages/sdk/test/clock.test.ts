@@ -1,0 +1,253 @@
+// SPDX-License-Identifier: MIT
+/* ============================================================================
+   The contract-visible block clock.
+
+   Fixtures model an Arbitrum Nitro chain, where eth_blockNumber (~62.4M) and
+   the EVM's block.number / header l1BlockNumber (~25.97M) are different clocks.
+   NITRO is a synthetic chain id the address book does not know (so it is
+   probed), and PARENT_L1 a synthetic clock at 12 s. Nothing here reaches the
+   network.
+   ============================================================================ */
+
+import { describe, expect, it } from "vitest";
+import type { Hex } from "viem";
+
+import {
+  CONTRACT_CLOCK_PROBE_CALLDATA,
+  GULLYCORE_DEPLOYMENTS,
+  MEASURED_CONTRACT_CLOCKS,
+  isGullyCoreChainId,
+  blockWindowPhase,
+  clockStretch,
+  contractBlocksToSeconds,
+  decodeContractClockProbe,
+  getContractClock,
+  readContractBlockNumber,
+  readContractClock,
+  requireContractClock,
+  secondsToContractBlocks,
+  secondsUntil,
+  timestampWindowPhase,
+  windowPhase,
+  type ContractClockClient,
+  type GullyCoreDeployment,
+} from "../src/index.js";
+
+/** Arbitrum One: no Gully Core record, no measured entry, so the reader probes it. */
+const NITRO = 42161;
+/** A synthetic parent-L1 clock at Ethereum's 12 s slot. */
+const PARENT_L1 = { chainId: NITRO, clock: "parent-l1", contractBlockTimeCentis: 1200 } as const;
+
+const L2_HEAD = 62_356_430n;
+const L1_AT_HEAD = 25_971_883n;
+const TS = 1_789_343_079n;
+
+const word = (v: bigint): string => v.toString(16).padStart(64, "0");
+const probeReturn = (n: bigint, t: bigint): Hex => `0x${word(n)}${word(t)}`;
+
+interface FakeOpts {
+  readonly probe?: "ok" | "reverts" | "empty";
+  readonly l1BlockNumber?: string | bigint | undefined;
+  readonly number?: bigint;
+  readonly probeNumber?: bigint;
+}
+
+function fakeClient(o: FakeOpts = {}): ContractClockClient & { calls: Hex[] } {
+  const calls: Hex[] = [];
+  const number = o.number ?? L2_HEAD;
+  return {
+    calls,
+    async getBlockNumber() {
+      return number;
+    },
+    async call({ data }) {
+      calls.push(data);
+      if (o.probe === "reverts") throw new Error("creation calls not allowed");
+      if (o.probe === "empty") return { data: undefined };
+      return { data: probeReturn(o.probeNumber ?? L1_AT_HEAD, TS) };
+    },
+    async getBlock() {
+      const b: { number: bigint; timestamp: bigint; l1BlockNumber?: string | bigint } = { number, timestamp: TS };
+      if (o.l1BlockNumber !== undefined) b.l1BlockNumber = o.l1BlockNumber;
+      return b;
+    },
+  };
+}
+
+describe("address-book clock metadata", () => {
+  it("has no metadata for an unknown chain, and says how to measure it", () => {
+    expect(getContractClock(1)).toBeUndefined();
+    expect(() => requireContractClock(1)).toThrow(/Measure it/);
+  });
+
+  it("knows HyperEVM's clock from the measured table, before Gully Core is deployed there", () => {
+    /* Read 2026-09-19: the NUMBER probe and eth_blockNumber both returned 46,290,513;
+       ~1 s small blocks. */
+    expect(MEASURED_CONTRACT_CLOCKS[999]).toEqual({
+      chainId: 999,
+      clock: "native",
+      contractBlockTimeCentis: 100,
+    });
+    expect(getContractClock(999)?.clock).toBe("native");
+    expect(requireContractClock(999).contractBlockTimeCentis).toBe(100);
+  });
+
+  it("lets the address book win over the measured table for a deployed chain", () => {
+    /* A measured entry is a stand-in until the chain is in GULLYCORE_DEPLOYMENTS.
+       Once it is, its own record is the truth, and the two must not disagree. */
+    const book: Readonly<Record<number, GullyCoreDeployment>> = GULLYCORE_DEPLOYMENTS;
+    for (const [raw, measured] of Object.entries(MEASURED_CONTRACT_CLOCKS)) {
+      const id = Number(raw);
+      if (!isGullyCoreChainId(id)) continue;
+      expect(book[id]!.contractBlockClock).toBe(measured.clock);
+      expect(book[id]!.contractBlockTimeCentis).toBe(measured.contractBlockTimeCentis);
+    }
+  });
+});
+
+describe("the probe bytecode", () => {
+  it("is NUMBER, MSTORE 0, TIMESTAMP, MSTORE 32, RETURN 64", () => {
+    expect(CONTRACT_CLOCK_PROBE_CALLDATA).toBe("0x436000524260205260406000f3");
+  });
+
+  it("decodes both words, and refuses a return of the wrong size", () => {
+    expect(decodeContractClockProbe(probeReturn(L1_AT_HEAD, TS))).toEqual({ number: L1_AT_HEAD, timestamp: TS });
+    expect(() => decodeContractClockProbe(`0x${word(1n)}`)).toThrow(/expected 64/);
+  });
+});
+
+describe("readContractClock", () => {
+  it("on a Nitro chain returns the EVM's number, not eth_blockNumber", async () => {
+    const r = await readContractClock(fakeClient(), NITRO);
+    expect(r.contractBlockNumber).toBe(L1_AT_HEAD);
+    expect(r.rpcBlockNumber).toBe(L2_HEAD);
+    expect(r.method).toBe("eth_call NUMBER");
+    expect(r.clock).toBe("parent-l1");
+    expect(r.timestamp).toBe(TS);
+  });
+
+  it("falls back to the header's l1BlockNumber when the RPC refuses creation calls", async () => {
+    const c = fakeClient({ probe: "reverts", l1BlockNumber: `0x${L1_AT_HEAD.toString(16)}` });
+    const r = await readContractClock(c, NITRO);
+    expect(r.contractBlockNumber).toBe(L1_AT_HEAD);
+    expect(r.method).toBe("header l1BlockNumber");
+  });
+
+  it("accepts an l1BlockNumber already formatted as a bigint", async () => {
+    const r = await readContractClock(fakeClient({ probe: "empty", l1BlockNumber: L1_AT_HEAD }), NITRO);
+    expect(r.contractBlockNumber).toBe(L1_AT_HEAD);
+  });
+
+  it("NEVER falls back to eth_blockNumber on a parent-L1 chain", async () => {
+    await expect(readContractClock(fakeClient({ probe: "reverts" }), NITRO)).rejects.toThrow(/NOT a substitute/);
+  });
+
+  it("uses eth_blockNumber on a native chain without probing", async () => {
+    const c = fakeClient({ number: 46_290_513n });
+    const r = await readContractClock(c, 999);
+    expect(r.contractBlockNumber).toBe(46_290_513n);
+    expect(r.method).toBe("eth_blockNumber");
+    expect(c.calls).toHaveLength(0);
+  });
+
+  it("probes an unknown chain and reports which clock it found", async () => {
+    const nitro = await readContractClock(fakeClient(), NITRO);
+    expect(nitro.clock).toBe("parent-l1");
+    const l1 = await readContractClock(fakeClient({ number: 100n, probeNumber: 100n }), 1);
+    expect(l1.clock).toBe("native");
+    expect(l1.contractBlockNumber).toBe(100n);
+  });
+
+  it("readContractBlockNumber is the bare number", async () => {
+    expect(await readContractBlockNumber(fakeClient(), NITRO)).toBe(L1_AT_HEAD);
+  });
+});
+
+describe("durations at the real contract cadence", () => {
+  it("a 432,000-block delay at 12 s is 60 days, not 12 hours", () => {
+    expect(contractBlocksToSeconds(432_000n, PARENT_L1)).toBe(60 * 86_400);
+  });
+
+  it("a 26,000,000-block cap at 12 s is ~9.9 years", () => {
+    const s = contractBlocksToSeconds(26_000_000n, PARENT_L1);
+    expect(s).toBe(312_000_000);
+    expect(s / (365.25 * 86_400)).toBeCloseTo(9.89, 2);
+  });
+
+  it("secondsToContractBlocks rounds up and inverts", () => {
+    expect(secondsToContractBlocks(12 * 3600, PARENT_L1)).toBe(3_600n);
+    expect(secondsToContractBlocks(13, PARENT_L1)).toBe(2n);
+    expect(contractBlocksToSeconds(secondsToContractBlocks(3 * 86_400, PARENT_L1), PARENT_L1)).toBe(3 * 86_400);
+  });
+
+  it("clockStretch is 120 for a declared 10 centis on a 12 s clock", () => {
+    expect(clockStretch(10, PARENT_L1)).toBe(120);
+    expect(clockStretch(1200, PARENT_L1)).toBe(1);
+  });
+
+  it("accepts a chain id and resolves its measured clock, refusing an unmeasured one", () => {
+    expect(contractBlocksToSeconds(3_600n, 999)).toBe(3_600);
+    expect(secondsToContractBlocks(60, 999)).toBe(60n);
+    expect(() => contractBlocksToSeconds(1n, 1)).toThrow(/Measure it/);
+  });
+
+  it("refuses negative inputs", () => {
+    expect(() => contractBlocksToSeconds(-1n, PARENT_L1)).toThrow(RangeError);
+    expect(() => secondsToContractBlocks(-1, PARENT_L1)).toThrow(RangeError);
+  });
+});
+
+describe("blockWindowPhase across the clock mismatch", () => {
+  /* A proposal made at contract block 25,971,883. */
+  const effective = L1_AT_HEAD + 432_000n;
+  const expiry = effective + 2_592_000n;
+
+  it("is 'before' against the contract clock", () => {
+    expect(blockWindowPhase(effective, expiry, L1_AT_HEAD)).toBe("before");
+  });
+
+  it("would be 'closed' against eth_blockNumber — the bug this module removes", () => {
+    expect(blockWindowPhase(effective, expiry, L2_HEAD)).toBe("closed");
+  });
+
+  it("opens at effective, stays open through expiry inclusive, then closes", () => {
+    expect(blockWindowPhase(effective, expiry, effective)).toBe("open");
+    expect(blockWindowPhase(effective, expiry, expiry)).toBe("open");
+    expect(blockWindowPhase(effective, expiry, expiry + 1n)).toBe("closed");
+  });
+
+  it("with no end block, never closes", () => {
+    expect(blockWindowPhase(effective, null, effective + 10n ** 9n)).toBe("open");
+  });
+
+  it("startBlock 0 means no window", () => {
+    expect(blockWindowPhase(0n, null, L1_AT_HEAD)).toBe("none");
+  });
+});
+
+describe("timestamp windows (Option B contracts)", () => {
+  const T = 1_789_346_507n;
+
+  it("timestampWindowPhase has the same inclusive semantics as the block form", () => {
+    expect(timestampWindowPhase(0n, null, T)).toBe("none");
+    expect(timestampWindowPhase(T + 1n, T + 10n, T)).toBe("before");
+    expect(timestampWindowPhase(T, T, T)).toBe("open");
+    expect(timestampWindowPhase(T - 10n, T - 1n, T)).toBe("closed");
+  });
+
+  it("windowPhase picks the clock the contract stores and refuses a missing block number", () => {
+    expect(windowPhase("timestamp", T - 1n, T + 1n, { timestamp: T, contractBlockNumber: null })).toBe("open");
+    expect(() => windowPhase("contract-block", 1n, 2n, { timestamp: T, contractBlockNumber: null })).toThrow();
+    expect(windowPhase("contract-block", L1_AT_HEAD + 1n, null, { timestamp: T, contractBlockNumber: L1_AT_HEAD })).toBe(
+      "before",
+    );
+  });
+
+  it("secondsUntil is exact for timestamps and an estimate at the real cadence for blocks", () => {
+    expect(secondsUntil("timestamp", T + 300n, { timestamp: T, contractBlockNumber: null }, undefined)).toBe(300);
+    expect(
+      secondsUntil("contract-block", L1_AT_HEAD + 25n, { timestamp: T, contractBlockNumber: L1_AT_HEAD }, PARENT_L1),
+    ).toBe(300);
+    expect(secondsUntil("contract-block", 5n, { timestamp: T, contractBlockNumber: null }, PARENT_L1)).toBeNull();
+  });
+});

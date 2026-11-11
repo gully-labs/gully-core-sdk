@@ -1,0 +1,22 @@
+Gully Core SDK
+Copyright (c) 2026 Gully Labs
+
+Licensed under the MIT License (see LICENSE).
+
+This SDK began as the DeepCore Protocol TypeScript SDK (MIT, Copyright (c) 2026 DeepCore Protocol
+contributors) and is maintained by Gully Labs as the Gully Core SDK. The original copyright notice is
+kept in LICENSE and in each package's LICENSE.
+
+The SDK describes and calls the Gully Core contracts (https://github.com/gully-labs/gully-core),
+which are GPL-2.0-or-later and built on PancakeSwap Infinity:
+  https://github.com/pancakeswap/infinity-core
+  https://github.com/pancakeswap/infinity-periphery
+  https://github.com/pancakeswap/infinity-universal-router
+No Solidity source is included here. The ABIs, event signatures and constants in this SDK are
+interface facts read from those contracts, not copies of their implementation.
+
+Third-party packages are used under their own licences, listed in each package's package.json
+(viem: MIT; @clack/prompts: MIT; picocolors: ISC).
+
+The Gully Labs and Gully Core names and logos are not licensed under the MIT License; they identify
+the project.

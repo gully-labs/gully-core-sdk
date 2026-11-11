@@ -1,0 +1,22 @@
+# gitleaks config for this repository: the default rules, minus values that are public by design.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "public on-chain data and well-known test values"
+regexTarget = "secret"
+regexes = [
+  # contract and token addresses, pool ids and hashes: public chain data
+  '''^0x[0-9a-fA-F]{40}$''',
+  '''^0x[0-9a-fA-F]{64}$''',
+  # anvil / hardhat account 0: a published test key used by the CLI's refusal tests
+  '''^ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80$''',
+  # identifiers the generic rule mistakes for keys
+  '''^launchpadKitV2$''',
+  '''^computeKitV2LegKey$''',
+  '''^decubate/onfinality/tenderly$''',
+]
+paths = [
+  '''(^|/)\.smoke/''',
+  '''(^|/)node_modules/''',
+]

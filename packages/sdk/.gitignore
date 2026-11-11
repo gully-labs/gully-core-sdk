@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# chainid.network/chains.json download cache for scripts/harvest-rpcs.mjs — 1.1 MB of
+# third-party data, re-fetchable with `--refresh`. The harvest RESULT
+# (rpc-harvest.json) is committed as evidence; the raw download is not.
+scripts/.cache/

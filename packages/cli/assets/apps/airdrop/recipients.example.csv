@@ -1,0 +1,6 @@
+# address,amount   (decimal amounts in whole tokens; --unit base for base units)
+# FORMAT ONLY. Copy this file, then add one "0x<recipient>,<amount>" line per recipient.
+# It ships with no rows on purpose: a sample address here would be sent real funds the
+# first time somebody runs the example command against a live chain. With no rows the
+# scripts refuse ("needs at least one recipient") rather than send anything.
+address,amount

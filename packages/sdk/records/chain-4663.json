@@ -1,0 +1,31 @@
+{
+  "$comment": "Facts about Robinhood Chain that the deployment record does not hold, read on chain (rpc.mainnet.chain.robinhood.com) on 2026-11-09. Core contract addresses never go here: they come from gully-core-4663.json.",
+  "key": "robinhood",
+  "name": "Robinhood Chain",
+  "explorer": "https://robinhoodchain.blockscout.com",
+  "isMainnet": true,
+  "deployedAtBlock": "109466287",
+  "deployedAtBlockSource": "The Vault's creation transaction 0x30aafacb\u2026761a (Sourcify deployment record), block 109466287.",
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "contractBlockClock": "parent-l1",
+  "contractBlockTimeCentis": 1200,
+  "contractBlockTimeSource": "Arbitrum Nitro: blocks carry l1BlockNumber (Ethereum), so NUMBER in the EVM is the Ethereum block, ~12 s (18 L1 blocks over 2000 L2 blocks of 0.1 s), 2026-11-09.",
+  "nativeValueTransfers": true,
+  "quoteTokenSource": "None: pools quote in the native coin (nativeValueTransfers true), so the record names no quote ERC-20 (defaultQuote returns native).",
+  "tokens": [],
+  "wethToken": {
+    "symbol": "WETH",
+    "name": "Wrapped Ether",
+    "decimals": 18,
+    "isTestToken": false,
+    "note": "Router argument and native quote."
+  },
+  "reused": {
+    "multicall3": "0xcA11bde05977b3631167028862bE2a173976CA11"
+  },
+  "reusedSource": "Multicall3 at its canonical address; eth_getCode returned the same 3,813-byte runtime on Robinhood, Base and BNB, 2026-11-09. The deployment record does not list it because Gully Core did not deploy it."
+}

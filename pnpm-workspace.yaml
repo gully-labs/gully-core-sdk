@@ -1,0 +1,4 @@
+packages:
+  - "packages/sdk"
+  - "packages/cli"
+  - "packages/create-gully-core-app"

@@ -1,0 +1,37 @@
+# Development copy of the devnet Foundry project.
+#
+# `gullycore devnet` copies this directory into a working directory and REGENERATES
+# this file with remappings pointing at whichever Gully Core checkout it resolved, so
+# the paths below only have to be right for in-repo iteration:
+#
+#     cd packages/cli/assets/devnet && forge build
+#
+# Keep the two in sync when adding a remapping: the generator lives in
+# src/commands/devnet.ts.
+
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "foundry-out"
+libs = []
+solc_version = "0.8.26"
+optimizer_runs = 200
+via_ir = true
+evm_version = "cancun"
+bytecode_hash = "none"
+allow_paths = ["../../../core", "../../../fees"]
+allow_internal_expect_revert = true
+fs_permissions = [
+    { access = "read", path = "./script/config" },
+    { access = "read-write", path = "./deployments" },
+]
+remappings = [
+    "infinity-core/=../../../core/",
+    "gullycore-fees/=../../../fees/",
+    "forge-std/=../../../core/lib/forge-std/src/",
+    "ds-test/=../../../core/lib/forge-std/lib/ds-test/src/",
+    "@openzeppelin/=../../../core/lib/openzeppelin-contracts/",
+    "solmate/=../../../core/lib/solmate/",
+    "hp-transient/=../../../core/src/libraries/transient/eip1153/",
+]

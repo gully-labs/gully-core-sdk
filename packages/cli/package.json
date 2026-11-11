@@ -1,0 +1,81 @@
+{
+  "name": "@gullylabs/core-cli",
+  "version": "0.3.0",
+  "description": "The gullycore command: swap, pools, liquidity, launches, locks, fees and chains on Gully Core from a terminal, simulated and guarded, plus hosted sites, airdrops, splits and hook scaffolding. MIT; signs only with an encrypted keystore or a hardware wallet, never a raw key.",
+  "license": "MIT",
+  "homepage": "https://docs.gullycore.xyz",
+  "type": "module",
+  "bin": {
+    "create-gully-core-hook": "./dist/bin/create-gully-core-hook.js",
+    "gullycore": "./dist/bin/gullycore.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke:testnet": "node scripts/smoke-testnet.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "keywords": [
+    "gullycore",
+    "gully-core",
+    "cli",
+    "launchpad",
+    "dex",
+    "hooks",
+    "amm",
+    "foundry",
+    "scaffold",
+    "devnet",
+    "airdrop",
+    "defi"
+  ],
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "@gullylabs/core-sdk": "workspace:*",
+    "picocolors": "^1.1.1",
+    "viem": "^2.56.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "optionalDependencies": {
+    "@gullylabs/create-core-app": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gully-labs/gully-core-sdk.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/gully-labs/gully-core-sdk/issues"
+  },
+  "author": "Gully Labs (https://gullylabs.xyz)"
+}
