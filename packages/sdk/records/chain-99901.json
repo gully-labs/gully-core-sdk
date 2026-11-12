@@ -1,8 +1,8 @@
 {
-  "$comment": "Facts about Kinetiq Elysium (Arbitrum Orbit L3 on HyperEVM, HYPE native) that the deployment record does not hold, read on chain on 2026-11-09 after the release-3 record (the public deployment record) landed. RPC: https://rpc.elysium.kinetiq.xyz, Kinetiq's own, only. Explorer https://scan.elysp.com has no API. Core contract addresses never go here: they come from gully-core-99901.json.",
+  "$comment": "Facts about Kinetiq Elysium (Arbitrum Orbit L3 on HyperEVM, HYPE native) that the deployment record does not hold, read on chain on 2026-11-09 after the release-3 record (the public deployment record) landed. RPC: https://rpc.elysium.kinetiq.xyz, Kinetiq's own, only. Explorer https://elysium.kinetiq.xyz/explorer has no API. Core contract addresses never go here: they come from gully-core-99901.json.",
   "key": "elysium",
   "name": "Kinetiq Elysium",
-  "explorer": "https://scan.elysp.com",
+  "explorer": "https://elysium.kinetiq.xyz/explorer",
   "isMainnet": true,
   "deployedAtBlock": "2834807",
   "deployedAtBlockSource": "The Vault's creation transaction 0xa62862f0e0d41cb604ed9f43c4cce35ea9b35edcab5d1f44648543c55c4cfedf (release run broadcast 01_DeployVault run-latest, receipt read on chain: status 1, the Vault's OwnershipTransferred and CreateX ContractCreation logs), block 2834807. The RPC keeps no archive state, so eth_getCode bisection was not possible; Sourcify holds no creation data for it.",

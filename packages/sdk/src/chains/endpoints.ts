@@ -556,7 +556,7 @@ export const CHAIN_RPCS = {
    * without a filter 2,000 blocks. The TSTORE probe has not been run here (`eip1153: null`); the chain is Nitro-based and
    * the deployment used the default build, which BackendGuard confirmed at deploy time. In SINGLE_ENDPOINT_CHAINS:
    * supply a keyed node through `GULLYCORE_RPC_99901` for redundancy.
-   * Explorer: https://scan.elysp.com (no API). L3 blocks ~0.1 s; the EVM's block.number is the HyperEVM block (~0.985 s), see records/chain-99901.json.
+   * Explorer: https://elysium.kinetiq.xyz/explorer (Kinetiq, Blockscout; pages /address/<a>, /tx/<h>). L3 blocks ~0.1 s; the EVM's block.number is the HyperEVM block (~0.985 s), see records/chain-99901.json.
    */
   elysium: {
     chainId: 99901,
