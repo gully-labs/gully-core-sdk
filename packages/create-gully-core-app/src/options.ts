@@ -127,7 +127,9 @@ export function looksLikeAddress(value: string): boolean {
 
 export function normalizeChain(input: string): number {
   const key = input.trim().toLowerCase().replace(/[\s_-]/g, "");
-  const id = CHAIN_ALIASES.get(key);
+  /* Every display name --help prints ("gully chain testnet", "bnb chain", ...) works too, in any case and spacing. */
+  const byName = [...SUPPORTED_CHAINS, ...UNDEPLOYED_CHAINS].find(([, name]) => name.toLowerCase().replace(/[\s_-]/g, "") === key);
+  const id = CHAIN_ALIASES.get(key) ?? byName?.[0];
   if (id === undefined) {
     const list = (m: ReadonlyMap<number, string>) =>
       [...m.entries()].map(([chainId, name]) => `${name} (${chainId})`).join(", ");

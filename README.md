@@ -8,6 +8,8 @@ PancakeSwap Infinity's audited core. MIT licensed.
 | [`@gullylabs/core-sdk`](packages/sdk) | The address book for every Gully Core chain, pool keys and ids, hook permission bitmaps, typed events, quotes, launches, locks, vaults, orders and the Router API client. ESM and CommonJS, with types. Only dependency: `viem`. | `npm i @gullylabs/core-sdk viem` |
 | [`@gullylabs/core-cli`](packages/cli) | The `gullycore` command: swap, pools, liquidity, launches, locks, fees and chains from a terminal. Every send is simulated first; it signs only with an encrypted keystore or a hardware wallet. | `npm i -g @gullylabs/core-cli` |
 | [`@gullylabs/create-core-app`](packages/create-gully-core-app) | The app template: scaffold a DEX, a Launchpad or both on Gully Core. | `npm create @gullylabs/core-app@latest my-app` |
+| [`@gullylabs/core-connect`](packages/connect) | The template's wallet layer over RainbowKit and wagmi: the Gully Core chain list, a connect button and a chain switcher. | not on npm yet (next release) |
+| [`@gullylabs/core-widgets`](packages/widgets) | The template's React widgets: swap, launch, liquidity and locks, every send simulated first. | not on npm yet (next release) |
 
 CommonJS note: `require("@gullylabs/core-sdk")` works at runtime. viem publishes ESM-only type definitions, so a
 TypeScript project compiled as CommonJS with `moduleResolution: node16` needs `skipLibCheck` (the default in most
@@ -115,7 +117,7 @@ next sync, so the two never drift.
 ## Releasing
 
 `scripts/publish.sh` publishes from a clean checkout of a tagged commit. It runs the build, the tests, the sync check
-and the tarball smoke test, then `npm publish` for each package in order (sdk, create-core-app, cli). It reads an npm
+and the tarball smoke test, then `npm publish` for each package in order (sdk, core-connect, core-widgets, create-core-app, cli). It reads an npm
 automation token from `NPM_TOKEN` when one is set, or uses the npm login of the machine it runs on. When GitHub Actions
 runs, `.github/workflows/release.yml` does the same on a `v*` tag with npm provenance.
 

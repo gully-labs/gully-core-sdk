@@ -11,3 +11,14 @@ describe("CLI_VERSION", () => {
     expect(CLI_VERSION).toBe(pkg.version);
   });
 });
+
+describe("bin", () => {
+  /* `npx @gullylabs/core-cli <cmd>` needs a bin named after the package: with two bins and none called
+     "core-cli", npm exits "could not determine executable to run" (found on the published 0.3.0). */
+  it("has a core-cli bin that runs the gullycore command", () => {
+    const pkgPath = join(dirname(fileURLToPath(import.meta.url)), "..", "package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { bin: Record<string, string> };
+    expect(pkg.bin["core-cli"]).toBeDefined();
+    expect(pkg.bin["core-cli"]).toBe(pkg.bin["gullycore"]);
+  });
+});

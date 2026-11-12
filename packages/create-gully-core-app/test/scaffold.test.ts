@@ -63,6 +63,10 @@ describe("options", () => {
   it("resolves chain aliases", () => {
     expect(normalizeChain("elysium")).toBe(99901);
     expect(normalizeChain("Anubis")).toBe(6714);
+    // every display name --help prints is accepted, any case and spacing
+    expect(normalizeChain("gully chain testnet")).toBe(485590);
+    expect(normalizeChain("BNB Chain")).toBe(56);
+    expect(normalizeChain("kinetiq elysium")).toBe(99901);
     expect(normalizeChain("gully-testnet")).toBe(485590);
     expect(normalizeChain("bnb")).toBe(56);
     expect(normalizeChain("bsc")).toBe(56);

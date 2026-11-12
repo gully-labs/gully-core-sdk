@@ -19,7 +19,7 @@ npm install -g @gullylabs/core-cli     # Node 20+; or run once with npx @gullyla
 ```bash
 gullycore chain list                                  # where Gully Core runs
 gullycore doctor --chain gully-testnet                # RPCs, contract clock, address book, USD source
-gullycore swap quote --in WETH --out USDC.e --amount 0.1 --chain gully-testnet
+gullycore swap quote --in ETH --out 0x3De9Cbf8E013897c4CAc6C0dc523abf965372358 --amount 0.001 --chain gully-testnet
 gullycore pool list --chain gully-testnet --json
 gullycore fees --chain gully-testnet                  # the flat 0.30% rule beside what the chain charges
 gullycore launch --chain gully-testnet                # step-by-step launch, priced by its opening market cap

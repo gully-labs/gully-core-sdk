@@ -32,7 +32,7 @@ directory is npm's: it passes the flags through `npm create` to the scaffolder.
 Run it with no flags and it prompts. Add `--yes` and it never will: every option
 has a flag, and anything with no safe default is an error rather than a guess.
 
-The same scaffolder runs as `gullycore init` in `@gullylabs/core-cli` (coming soon),
+The same scaffolder runs as `gullycore init` in `@gullylabs/core-cli`,
 and it is also importable: `import { runCreate } from "@gullylabs/create-core-app"`,
 then `await runCreate(["my-app", "--chain", "base", "--yes"])` returns the exit code.
 

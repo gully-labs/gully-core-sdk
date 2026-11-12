@@ -5,6 +5,8 @@ versions were never published.
 
 ## 0.3.1 (unreleased)
 
+- Package metadata only: the published 0.3.0 `package.json` scripts named `scripts/write-cjs-marker.mjs`,
+  which is not in the tarball; `build` and `build:ci` now write the CommonJS marker inline. No API change.
 - Kinetiq Elysium (99901): the explorer is Kinetiq's official one, `https://elysium.kinetiq.xyz/explorer`
   (pages `/address/<a>`, `/tx/<h>`), replacing scan.elysp.com in the address book and chain record.
 

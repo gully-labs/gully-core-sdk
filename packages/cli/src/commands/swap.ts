@@ -50,7 +50,7 @@ export const SWAP_QUOTE_SPEC: CommandSpec = {
   usage: "gullycore swap quote --in <token> --out <token> --amount <n> --chain <chain> [--pool <id>]",
   bytes32Flags: ["pool"],
   flags: { ...CHAIN_FLAGS, ...TRADE_FLAGS },
-  examples: ["gullycore swap quote --in WETH --out USDC.e --amount 0.1 --chain gully-testnet", "gullycore swap quote --in 0xA… --out 0xB… --amount 10 --pool 0x… --chain 485590 --json"],
+  examples: ["gullycore swap quote --in ETH --out 0x3De9Cbf8E013897c4CAc6C0dc523abf965372358 --amount 0.001 --chain gully-testnet", "gullycore swap quote --in 0xA… --out 0xB… --amount 10 --pool 0x… --chain 485590 --json"],
 };
 
 export const SWAP_EXEC_SPEC: CommandSpec = {
@@ -66,8 +66,8 @@ export const SWAP_EXEC_SPEC: CommandSpec = {
     "min-out": { kind: "string", describe: "a floor of your own, in whole tokens; it must be no looser than --slippage", placeholder: "<n>" },
   },
   examples: [
-    "gullycore swap exec --in WETH --out USDC.e --amount 0.1 --chain gully-testnet --dry-run --from 0x…",
-    "gullycore swap exec --in WETH --out USDC.e --amount 0.1 --chain gully-testnet --keystore me.json",
+    "gullycore swap exec --in ETH --out 0x3De9Cbf8E013897c4CAc6C0dc523abf965372358 --amount 0.001 --chain gully-testnet --dry-run --from 0x…",
+    "gullycore swap exec --in ETH --out 0x3De9Cbf8E013897c4CAc6C0dc523abf965372358 --amount 0.001 --chain gully-testnet --keystore me.json",
   ],
 };
 

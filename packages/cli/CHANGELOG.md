@@ -1,5 +1,12 @@
 # Changelog — `@gullylabs/core-cli`
 
+## 0.3.1 (unreleased)
+
+- `npx @gullylabs/core-cli <command>` works: a `core-cli` bin (same entry as `gullycore`). On 0.3.0 npx stopped
+  with "could not determine executable to run" because the package had two bins and neither matched its name.
+- The swap examples (README, `--help`) quote a pair the testnet can fill: ETH to gTGULLY
+  (`0x3De9…2358`, 0.001 ETH). WETH to USDC.e answered "no configured source can fill this trade".
+
 ## 0.3.0 — unreleased
 
 - `gullycore swap quote | exec`, through the Router API or one pool with `--pool`: expected and minimum out,
