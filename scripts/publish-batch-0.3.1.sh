@@ -84,7 +84,13 @@ publish_dir() { # <package dir> : build, test, consumer d.ts check, then npm pub
   if [ "$DRY" = 1 ]; then
     (cd "$d" && npm publish --access public --dry-run)
   else
-    (cd "$d" && npm publish --access public)
+    # 2FA: npm's browser flow timed out on 2026-11-12 (the /-/v1/done poll ended 404 before the approval page was
+    # finished), so the one-time code from the authenticator app is read here and passed as --otp. The code is typed by
+    # the owner in this terminal and is never written anywhere. Enter alone falls back to the browser approval.
+    local otp=""
+    read -r -p "authenticator code for $name@$version (6 digits; Enter = browser approval): " otp
+    case "$otp" in ''|[0-9][0-9][0-9][0-9][0-9][0-9]) ;; *) echo "not a 6-digit code: stopped" >&2; exit 1 ;; esac
+    (cd "$d" && npm publish --access public ${otp:+--otp="$otp"})
     for i in 1 2 3 4 5 6; do
       if npm view "$name@$version" version >/dev/null 2>&1; then echo "on npm: $name@$version"; return 0; fi
       sleep 10
