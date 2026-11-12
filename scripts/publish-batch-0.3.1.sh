@@ -4,6 +4,8 @@
 #   Windows: open Git Bash (forward-slash paths), then
 #     cd /c/Users/Admin/Desktop/PROJECTS/gully-core-sdk && bash scripts/publish-batch-0.3.1.sh --dry-run
 #     cd /c/Users/Admin/Desktop/PROJECTS/gully-core-sdk && bash scripts/publish-batch-0.3.1.sh
+#   After the five gully-core-sdk packages are on npm (2026-11-12 06:40 UTC), the rest only:
+#     cd /c/Users/Admin/Desktop/PROJECTS/gully-core-sdk && bash scripts/publish-batch-0.3.1.sh --skip-core
 #
 # What it publishes, in order (a version already on npm is skipped, so a re-run after a 2FA timeout is safe):
 #   1. gully-labs/gully-core-sdk  (this repo, scripts/publish.sh: build, tests, sync check, tarball smoke incl. a
@@ -21,9 +23,11 @@
 set -euo pipefail
 
 DRY=0
+SKIP_CORE=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
+    --skip-core) SKIP_CORE=1 ;;  # the five gully-core-sdk packages are on npm already: only chain + pay
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
 done
@@ -90,7 +94,8 @@ publish_dir() { # <package dir> : build, test, consumer d.ts check, then npm pub
 }
 
 say "1/3 gully-core-sdk (5 packages)"
-if [ "$DRY" = 1 ]; then (cd "$CORE" && bash scripts/publish.sh --dry-run); else (cd "$CORE" && bash scripts/publish.sh --yes); fi
+if [ "$SKIP_CORE" = 1 ]; then echo "skipped (--skip-core)"
+elif [ "$DRY" = 1 ]; then (cd "$CORE" && bash scripts/publish.sh --dry-run); else (cd "$CORE" && bash scripts/publish.sh --yes); fi
 
 say "2/3 gullychain-sdk"
 publish_dir "$CHAIN"
