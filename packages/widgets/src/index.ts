@@ -78,5 +78,11 @@ export * from "./components/LocksWidgets.js";
 export * from "./components/TokenTrustPanel.js";
 export * from "./components/LockerWidget.js";
 
+// --- buy alerts (`<gully-buys>` and its React form) -----------------------
+export * from "./buys/model.js";
+export { BuysSource, HISTORY_PER_POOL, type BuysState, type BuysListener, type BuysSourceOptions, type TokenWords } from "./buys/source.js";
+export { GullyBuysElement, defineGullyBuys, BUYS_CSS } from "./buys/element.js";
+export { BuysFeed, type BuysFeedProps } from "./buys/react.js";
+
 // --- theming ---------------------------------------------------------------
 export { WIDGET_CSS, injectWidgetStyles } from "./styles/css.js";

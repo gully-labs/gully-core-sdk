@@ -251,6 +251,31 @@ It reads the same way as `LocksBadge` and says only what it read: "X% of active 
 
 The locker is not in this bundle: it signs transactions, and a framework-free script cannot bring a wallet. Use `LockerWidget` from React, or the Gully Core site's `/embed/locker?net=<network>` iframe, which carries its own wallet connect.
 
+### Buy alerts (`buys.js`, `<gully-buys>`, `BuysFeed`)
+
+Real-time buys of a token on any website, with no Telegram group tracking it and no key. One script tag, one element: every Gully Core pool of the token on the chain (launch pools, DEX pools, hook pools) is followed; the history comes from the Gully Core API's index and the live tail from the pool managers' `Swap` logs, read through Gully RPC's keyless project every 15 s while the tab is visible (the same reader the app's token page polls).
+
+```html
+<script src="https://gullycore.xyz/buys.js" defer></script>
+
+<gully-buys chain="8453" token="0x…token…" layout="feed"></gully-buys>
+<gully-buys chain="99901" token="0x…token…" layout="strip" theme="light"></gully-buys>
+<gully-buys chain="485590" token="0x…token…" layout="toast" sells></gully-buys>
+```
+
+| Attribute | |
+|---|---|
+| `chain` | 8453 Base, 56 BNB Chain, 4663 Robinhood Chain, 99901 Kinetiq Elysium, 6714 Anubis, 485590 Gully Chain Testnet |
+| `token` / `pool` | the token's address (every pool of it), or one pool id |
+| `layout` | `feed` (card list, default), `strip` (one bar across the page), `toast` (corner pop-ups; `corner` bottom-right, bottom-left, top-right, top-left) |
+| `sells` | present: sells shown too, in red; absent: buys only |
+| `theme` | `dark` (default), `light`, `auto` |
+| `step`, `emoji`, `min` | dollars per emoji on the scale (10), the buy emoji (🟢; sells are 🔴), the smallest trade shown in dollars (0) |
+| `limit` | alerts kept on screen (feed 10, strip 12) |
+| `rpc`, `api`, `site` | an RPC URL instead of the keyless project; the API base (`…/v1`); the app origin token links open on |
+
+Each alert is dollars first ("$42.10") with the quote amount in small print ("0.021 ETH"), the amount bought, how long ago, and a link to the transaction on the chain's explorer; the header links the token page on the Gully Core app. A quote the API has no dollar price for shows "unpriced" beside its amount. Colours are the Gully Core kit's, every one a `--gully-buys-*` custom property; the widget renders into a shadow root and stops animating under `prefers-reduced-motion`. From React, `BuysFeed` takes the same options as props and renders the same element. Docs with the three layouts live: https://docs.gullycore.xyz/buy-alerts/.
+
 ### Iframe bridge
 
 For hosts that will not run third-party script in their own realm — a reasonable position when the script asks users to sign transactions.
