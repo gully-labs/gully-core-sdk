@@ -7,7 +7,7 @@ export const CHAIN_99901 = {
   chainId: 99901,
   key: "elysium",
   name: "Kinetiq Elysium",
-  explorer: "https://scan.elysp.com",
+  explorer: "https://elysium.kinetiq.xyz/explorer",
   isMainnet: true,
   deployedAtBlock: 2834807n,
   nativeCurrency: {"name":"HYPE","symbol":"HYPE","decimals":18},

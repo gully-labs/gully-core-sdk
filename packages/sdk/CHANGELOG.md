@@ -3,6 +3,11 @@
 MIT. Source: <https://github.com/gully-labs/gully-core-sdk>. 0.3.0 is the first release on npm; earlier
 versions were never published.
 
+## 0.3.1 (unreleased)
+
+- Kinetiq Elysium (99901): the explorer is Kinetiq's official one, `https://elysium.kinetiq.xyz/explorer`
+  (pages `/address/<a>`, `/tx/<h>`), replacing scan.elysp.com in the address book and chain record.
+
 ## 0.3.0 (2026-11-11)
 
 - **Every live Gully Core chain in the address book:** Anubis (6714), Robinhood Chain (4663), Base (8453),
