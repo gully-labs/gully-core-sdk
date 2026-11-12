@@ -187,7 +187,7 @@ You need [Foundry](https://getfoundry.sh) (`forge`, `anvil`) and Node 20+.
 
 ```bash
 # 1. install the CLI
-npm install -g @gullylabs/core-cli   # once published; puts `gullycore` and `create-gully-core-hook` on PATH
+npm install -g @gullylabs/core-cli   # puts `gullycore` and `create-gully-core-hook` on PATH
 ```
 
 ```bash
