@@ -52,7 +52,7 @@ clean_main() { # <dir> <expected package.json path> <expected version>
   if [ -n "$(git -C "$dir" status --porcelain)" ]; then git -C "$dir" status --short >&2; echo "refusing: $dir is not clean" >&2; exit 1; fi
   git -C "$dir" fetch -q origin
   [ "$(git -C "$dir" rev-parse HEAD)" = "$(git -C "$dir" rev-parse origin/main)" ] || { echo "refusing: $dir is not at origin/main (git -C $dir checkout main && git -C $dir pull)" >&2; exit 1; }
-  have="$(node -p "require('$dir/$pj').version")"
+  have="$(cd "$dir" && node -p "require('./$pj').version")"  # relative: Windows Node can't resolve /c/... paths
   [ "$have" = "$want" ] || { echo "refusing: $dir/$pj is $have, expected $want (merge the 0.3.1 PR first)" >&2; exit 1; }
   echo "ok  $dir @ $(git -C "$dir" rev-parse --short HEAD), $pj $have"
 }
@@ -72,8 +72,8 @@ fi
 
 publish_dir() { # <package dir> : build, test, consumer d.ts check, then npm publish (skipped when on npm)
   local d="$1" name version
-  name="$(node -p "require('$d/package.json').name")"
-  version="$(node -p "require('$d/package.json').version")"
+  name="$(cd "$d" && node -p "require('./package.json').name")"
+  version="$(cd "$d" && node -p "require('./package.json').version")"
   say "$name@$version  ($d)"
   if npm view "$name@$version" version >/dev/null 2>&1; then echo "already on npm: skipped"; return 0; fi
   (cd "$d" && { if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-audit --no-fund; else npm install --ignore-scripts --no-audit --no-fund --no-package-lock; fi; } && npm run build && npm test && node scripts/check-dts.mjs)
