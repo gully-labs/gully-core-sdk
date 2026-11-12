@@ -240,7 +240,6 @@
     "blockstore-core": "^7.0.1",
     "ipfs-unixfs-importer": "^17.1.1",
     "multiformats": "^14.0.5",
-    "ox": "0.14.65",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   },
