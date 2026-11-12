@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Publish @gullylabs/core-sdk, @gullylabs/create-core-app and @gullylabs/core-cli to npm, in that order.
+# Publish @gullylabs/core-sdk, @gullylabs/core-connect, @gullylabs/core-widgets, @gullylabs/create-core-app and
+# @gullylabs/core-cli to npm, in that order (the app template installs connect and widgets, so they go before it).
+# Windows: run from Git Bash (forward-slash paths), e.g.  cd /c/Users/<you>/Desktop/PROJECTS/gully-core-sdk && bash scripts/publish.sh
 #
 #   bash scripts/publish.sh --dry-run     everything up to and including `npm publish --dry-run`
 #   bash scripts/publish.sh               the same, then the real publish (asks before it starts)
@@ -96,11 +98,13 @@ publish_one() {
 }
 
 if [ "$DRY" = 0 ] && [ "$YES" = 0 ]; then
-  read -r -p "Publish the three packages above to npm? Type PUBLISH: " ans
+  read -r -p "Publish the five packages above to npm? Type PUBLISH: " ans
   [ "$ans" = "PUBLISH" ] || { echo "stopped"; exit 1; }
 fi
 
 publish_one sdk
+publish_one connect
+publish_one widgets
 publish_one create-gully-core-app
 publish_one cli
 

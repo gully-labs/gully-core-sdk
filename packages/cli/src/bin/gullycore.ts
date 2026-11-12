@@ -75,7 +75,7 @@ ${ui.bold("EXIT CODES")}
 ${ui.bold("EXAMPLES")}
   gullycore chain list
   gullycore doctor --chain gully-testnet
-  gullycore swap quote --in WETH --out USDC.e --amount 0.1 --chain gully-testnet
+  gullycore swap quote --in ETH --out 0x3De9Cbf8E013897c4CAc6C0dc523abf965372358 --amount 0.001 --chain gully-testnet
   gullycore pool list --chain gully-testnet --json
   gullycore launch --chain gully-testnet --name Mochi --symbol MOCHI --market-cap 2 --from 0x… --json
 

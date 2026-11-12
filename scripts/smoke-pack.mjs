@@ -3,7 +3,7 @@
 /* Tarball smoke test: what npm would ship, installed the way a user installs it.
 
    1. `pnpm pack` each package (workspace:* ranges become real versions) into .smoke/tarballs.
-   2. A fresh project in .smoke/project installs the three tarballs and viem from the npm registry.
+   2. A fresh project in .smoke/project installs the sdk, cli and create-core-app tarballs and viem from the npm registry.
    3. Checks, all read-only (nothing is signed or sent):
       - ESM import and CommonJS require of @gullylabs/core-sdk resolve, with the six chains in the book;
       - the installed CLI's dependency on the SDK is a real version, not a workspace range;
@@ -13,7 +13,9 @@
         builderFee() is the published 0.30 %, and the quoter answers a quote (or, where no pool exists yet,
         refuses it on chain with a revert, which proves the contract and RPC path);
       - `gullycore chain list --json` and `gullycore --version` from the installed bin;
-      - `create-app` scaffolds a project from the installed tarball (no install of the generated app).
+      - `core-cli --version` (the bin `npx @gullylabs/core-cli` runs);
+      - `create-app` scaffolds a project from the installed tarball, and that project installs (its @gullylabs
+        dependencies pointed at the packed tarballs: core-sdk, core-connect, core-widgets) and runs `npm run build`.
 
    node scripts/smoke-pack.mjs [--mainnet 8453] [--keep]
      SMOKE_RPC_BASE   default https://rpc.gullyrpc.xyz/gullychain/evm  (the chain id is appended)
@@ -37,10 +39,11 @@ rmSync(smoke, { recursive: true, force: true });
 mkdirSync(tarballs, { recursive: true });
 mkdirSync(project, { recursive: true });
 
-for (const pkg of ["sdk", "create-gully-core-app", "cli"]) run("pnpm", ["pack", "--pack-destination", tarballs], join(root, "packages", pkg));
+for (const pkg of ["sdk", "connect", "widgets", "create-gully-core-app", "cli"]) run("pnpm", ["pack", "--pack-destination", tarballs], join(root, "packages", pkg));
 const tgz = readdirSync(tarballs).filter((f) => f.endsWith(".tgz"));
 const find = (prefix) => { const f = tgz.find((x) => x.startsWith(prefix)); if (!f) throw new Error(`no tarball ${prefix}*`); return join(tarballs, f); };
 const sdkTgz = find("gullylabs-core-sdk-"), cliTgz = find("gullylabs-core-cli-"), createTgz = find("gullylabs-create-core-app-");
+const connectTgz = find("gullylabs-core-connect-"), widgetsTgz = find("gullylabs-core-widgets-");
 
 writeFileSync(join(project, "package.json"), JSON.stringify({ name: "gully-core-smoke", private: true, type: "module" }, null, 2));
 run("npm", ["install", "--no-audit", "--no-fund", "--loglevel=error", sdkTgz, createTgz, cliTgz, "viem@^2"], project);
@@ -62,6 +65,7 @@ try {
 /* CLI bin */
 const bin = (name) => join(project, "node_modules", ".bin", win ? `${name}.cmd` : name);
 try { const v = run(bin("gullycore"), ["--version"], project, { capture: true }).trim(); check("gullycore --version", v.includes(cliPkg.version), v); } catch (e) { check("gullycore --version", false, String(e.stderr || e.message).slice(0, 300)); }
+try { const v = run(bin("core-cli"), ["--version"], project, { capture: true }).trim(); check("core-cli --version (npx @gullylabs/core-cli)", v.includes(cliPkg.version), v); } catch (e) { check("core-cli --version (npx @gullylabs/core-cli)", false, String(e.stderr || e.message).slice(0, 300)); }
 try {
   const out = JSON.parse(run(bin("gullycore"), ["chain", "list", "--json"], project, { capture: true }));
   const rows = out.result?.chains ?? [];
@@ -143,6 +147,28 @@ try {
 } catch (e) {
   try { run(bin("create-app"), ["smoke-app", "--chain", "gully-testnet", "--features", "dex", "--fee-bps", "0", "--yes"], project, { capture: true }); check("create-app scaffolds a project", existsSync(join(project, "smoke-app", "gullycore.config.ts"))); }
   catch (e2) { check("create-app scaffolds a project", false, String(e2.stderr || e2.stdout || e2.message).slice(0, 400)); }
+}
+
+/* The scaffolded app installs and builds: every @gullylabs dependency of the template must be in this batch.
+   The template's ranges are checked against the packed versions, then pointed at the tarballs (overrides too, so
+   core-connect and core-widgets get the packed SDK) so this proves the batch before any of it is on npm. */
+const app = join(project, "smoke-app");
+if (existsSync(join(app, "package.json"))) {
+  const packed = { "@gullylabs/core-sdk": sdkTgz, "@gullylabs/core-connect": connectTgz, "@gullylabs/core-widgets": widgetsTgz };
+  const appPkg = JSON.parse(readFileSync(join(app, "package.json"), "utf8"));
+  const wanted = Object.keys({ ...appPkg.dependencies, ...appPkg.devDependencies }).filter((n) => n.startsWith("@gullylabs/"));
+  const missing = wanted.filter((n) => !packed[n]);
+  check("template's @gullylabs dependencies are all in the batch", missing.length === 0, missing.length ? `not packed: ${missing.join(", ")}` : wanted.join(", "));
+  const ver = (t) => /-(\d+\.\d+\.\d+(?:-[\w.]+)?)\.tgz$/.exec(t)[1];
+  const rangeOk = wanted.filter((n) => packed[n]).every((n) => { const r = appPkg.dependencies[n] ?? appPkg.devDependencies[n]; const [maj, min] = r.replace(/^[\^~]/, "").split("."); const [pm, pn] = ver(packed[n]).split("."); return maj === pm && (maj !== "0" || min === pn); });
+  check("template's @gullylabs ranges match the packed versions", rangeOk, wanted.map((n) => `${n}@${appPkg.dependencies[n]}`).join(" "));
+  for (const [n, t] of Object.entries(packed)) if (appPkg.dependencies[n]) appPkg.dependencies[n] = `file:${t.split("\\").join("/")}`;
+  appPkg.overrides = { "@gullylabs/core-sdk": `file:${sdkTgz.split("\\").join("/")}` };
+  writeFileSync(join(app, "package.json"), JSON.stringify(appPkg, null, 2));
+  try { run("npm", ["install", "--no-audit", "--no-fund", "--loglevel=error"], app, { capture: true }); check("scaffolded app: npm install", true); }
+  catch (e) { check("scaffolded app: npm install", false, String(e.stderr || e.message).slice(0, 400)); }
+  try { run("npm", ["run", "build"], app, { capture: true }); check("scaffolded app: npm run build", existsSync(join(app, "dist", "index.html"))); }
+  catch (e) { check("scaffolded app: npm run build", false, String(e.stdout || "").slice(-800) + String(e.stderr || e.message).slice(-1200)); }
 }
 
 const bad = results.filter((r) => !r.ok);

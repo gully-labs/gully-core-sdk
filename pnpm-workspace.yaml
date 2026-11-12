@@ -1,4 +1,6 @@
 packages:
   - "packages/sdk"
+  - "packages/connect"
+  - "packages/widgets"
   - "packages/cli"
   - "packages/create-gully-core-app"

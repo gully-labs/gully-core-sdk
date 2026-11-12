@@ -1,0 +1,414 @@
+/* ============================================================================
+   @gullylabs/core-connect — component styles.
+
+   Import once, near the app's other global sheets:
+
+     import '@rainbow-me/rainbowkit/styles.css'
+     import '@gullylabs/core-connect/styles.css'
+
+   RainbowKit's sheet must come FIRST. Ours only ever adds rules; it never
+   depends on cascade order against RainbowKit except for the optional modal
+   logo at the bottom of this file, which needs to win over their heading rules.
+
+   Every colour is written as `var(--token, #literal)`. In the Gully Core dapp the
+   fallback is never used — `apps/web/src/styles/tokens.css` defines all of them,
+   so this control inherits any future token change for free. In a third-party
+   host that never loaded those tokens, the literals carry the brand unaided.
+   Values are transcribed from that same token sheet; see src/theme/tokens.ts.
+   ============================================================================ */
+
+.gullycore-connect,
+.gullycore-chain {
+  --lc-ease: var(--ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+  --lc-panel: var(--panel-alt, #24211A);
+  --lc-line: var(--hairline, #3A362B);
+  --lc-line-hover: var(--border-hover, #FD7716);
+  --lc-ink: var(--ink, #FEF4E3);
+  --lc-ink-muted: var(--muted-ink, #B9AE98);
+  --lc-ink-faint: var(--faint-ink, #B9AE98);
+  --lc-blue: var(--gullycore-blue, #FD7716);
+  --lc-blue-deep: var(--deep-blue, #A63F00);
+  --lc-success: var(--success, #10b981);
+  --lc-warning: var(--warning, #f59e0b);
+  --lc-error: var(--error, #f87171);
+  --lc-radius: var(--r-btn, 12px);
+
+  font-family: var(--font-body, Inter, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* ---------------------------------------------------------- screen-reader text */
+
+.gullycore-connect__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ status dot */
+
+.gullycore-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--lc-ink-faint);
+}
+.gullycore-dot--success { background: var(--lc-success); }
+.gullycore-dot--warning { background: var(--lc-warning); }
+.gullycore-dot--error { background: var(--lc-error); }
+.gullycore-dot--pending { background: var(--lc-warning); }
+
+.gullycore-dot--pulse { animation: gullycore-dot-pulse 2.4s var(--lc-ease) infinite; }
+
+@keyframes gullycore-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+
+/* Respect the OS setting. A pulsing dot is decoration; a vestibular trigger is
+   not an acceptable price for it. */
+@media (prefers-reduced-motion: reduce) {
+  .gullycore-dot--pulse { animation: none; }
+  .gullycore-connect__btn,
+  .gullycore-chain__trigger { transition: none; }
+}
+
+/* -------------------------------------------------------------- connect button */
+
+.gullycore-connect { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gullycore-connect--sidebar { flex-direction: column; align-items: stretch; }
+
+.gullycore-connect__btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius);
+  background: var(--lc-panel);
+  color: var(--lc-ink);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.25s var(--lc-ease), transform 0.25s var(--lc-ease),
+    background-color 0.25s var(--lc-ease);
+}
+.gullycore-connect__btn:hover:not(:disabled) {
+  border-color: var(--lc-line-hover);
+  transform: translateY(-1px);
+}
+.gullycore-connect__btn:focus-visible {
+  outline: 2px solid var(--lc-blue);
+  outline-offset: 2px;
+}
+.gullycore-connect__btn:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.gullycore-connect--sidebar .gullycore-connect__btn { width: 100%; }
+.gullycore-connect--inline .gullycore-connect__btn { padding: 8px 12px; }
+
+/* CTA (disconnected) — the one control on the page that must read as primary. */
+.gullycore-connect__btn--cta {
+  justify-content: center;
+  border-color: transparent;
+  background: var(--grad-primary, #FD7716);
+  color: var(--on-action, #0F0E0B);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.gullycore-connect__btn--cta:hover:not(:disabled) {
+  border-color: transparent;
+  box-shadow: var(--sh-btn, 0 10px 30px rgba(253, 119, 22, 0.32));
+}
+
+.gullycore-connect__plug {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  /* A plug glyph, inlined so the control needs no icon font or extra request. */
+  -webkit-mask: var(--gullycore-connect-plug-mask, none) center / contain no-repeat;
+  mask: var(--gullycore-connect-plug-mask, none) center / contain no-repeat;
+  border-radius: 3px;
+  opacity: 0.9;
+}
+
+.gullycore-connect__btn--error {
+  border-color: var(--lc-error);
+  color: var(--lc-error);
+  background: color-mix(in srgb, var(--lc-error) 10%, transparent);
+}
+
+.gullycore-connect__avatar {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--dapp-grad-avatar, linear-gradient(135deg, #FD7716, #FD7716));
+}
+
+.gullycore-connect__address {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gullycore-connect__balance {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 11px;
+  color: var(--lc-ink-muted);
+}
+
+.gullycore-connect__label { min-width: 0; }
+
+.gullycore-connect__btn--account .gullycore-dot,
+.gullycore-connect__btn--error .gullycore-dot { margin-left: auto; }
+
+/* chain chip beside the account */
+.gullycore-connect__btn--chain { gap: 8px; padding: 9px 10px; }
+.gullycore-connect__chain-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--lc-line);
+  object-fit: contain;
+}
+.gullycore-connect__chain-name {
+  font-size: 12px;
+  color: var(--lc-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------- chain switcher */
+
+.gullycore-chain { position: relative; display: inline-block; }
+
+.gullycore-chain__trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border: 1px solid var(--lc-line);
+  border-radius: var(--r-chip, 10px);
+  background: var(--lc-panel);
+  color: var(--lc-ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.25s var(--lc-ease);
+}
+.gullycore-chain__trigger:hover:not(:disabled) { border-color: var(--lc-line-hover); }
+.gullycore-chain__trigger:focus-visible { outline: 2px solid var(--lc-blue); outline-offset: 2px; }
+.gullycore-chain__trigger:disabled { cursor: not-allowed; opacity: 0.55; }
+.gullycore-chain__trigger.is-error { border-color: var(--lc-error); color: var(--lc-error); }
+
+.gullycore-chain__trigger-label {
+  max-width: 15ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gullycore-chain__trigger .gullycore-chain__icon { width: 16px; height: 16px; }
+
+.gullycore-chain__caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.65;
+}
+
+/* chain mark. The box is ours; whatever `renderIcon` returns is sized into it,
+   and the monogram fallback fills it when nothing is supplied. */
+.gullycore-chain__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+.gullycore-chain__icon > img,
+.gullycore-chain__icon > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gullycore-chain__icon-mono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--lc-line);
+  border-radius: inherit;
+  background: var(--lc-panel);
+  color: var(--lc-ink-muted);
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 9.5px;
+  line-height: 1;
+}
+
+.gullycore-chain__menu {
+  position: absolute;
+  z-index: 60;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 244px;
+  max-height: 360px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--lc-line);
+  border-radius: var(--r-sm, 14px);
+  background: var(--panel, #1B1913);
+  box-shadow: var(--sh-card-hover, 0 18px 48px rgba(6, 11, 10, 0.8));
+}
+
+.gullycore-chain__section + .gullycore-chain__section { margin-top: 2px; }
+
+.gullycore-chain__group {
+  margin: 0;
+  padding: 8px 10px 4px;
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lc-ink-faint);
+}
+
+.gullycore-chain__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--r-badge, 8px);
+  background: transparent;
+  color: var(--lc-ink);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s var(--lc-ease);
+}
+.gullycore-chain__row:hover { background: var(--lc-panel); }
+.gullycore-chain__row:focus-visible { outline: 2px solid var(--lc-blue); outline-offset: -2px; }
+.gullycore-chain__row.is-active { background: var(--active-nav, #A63F00); }
+
+/* Coming soon. `aria-disabled`, not `disabled` — the row stays focusable so the
+   reason in its accessible name is reachable. It must therefore LOOK inert
+   without the browser's help. */
+.gullycore-chain__row.is-unavailable {
+  cursor: default;
+  color: var(--lc-ink-muted);
+}
+.gullycore-chain__row.is-unavailable .gullycore-chain__icon { opacity: 0.55; }
+
+/* An app-level switch (the host reloads into that network's chrome): a normal
+   row with a trailing arrow, separated from the wallet rows by a hairline. */
+.gullycore-chain__section:has(.gullycore-chain__row--app) { border-top: 1px solid var(--lc-line, var(--hairline, rgba(128, 128, 128, 0.25))); margin-top: 4px; padding-top: 2px; }
+.gullycore-chain__row--app .gullycore-chain__row-name { font-weight: 600; }
+.gullycore-chain__row-arrow {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.6;
+  flex: none;
+}
+.gullycore-chain__row.is-unavailable:hover { background: transparent; }
+
+.gullycore-chain__row-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.gullycore-chain__row-tag {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: var(--r-micro, 7px);
+  background: color-mix(in srgb, var(--lc-ink-faint) 18%, transparent);
+  color: var(--lc-ink-muted);
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.gullycore-chain__row-tag--soon {
+  background: color-mix(in srgb, var(--lc-warning) 16%, transparent);
+  color: var(--lc-warning);
+}
+
+/* Selected mark: a CSS tick, so no icon asset is needed for the one glyph the
+   switcher itself owns. */
+.gullycore-chain__check {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 10px;
+  margin: 0 3px 2px 1px;
+  border: solid var(--lc-blue);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.gullycore-chain__error {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--lc-error);
+}
+
+/* ============================================================================
+   RainbowKit modal branding.
+
+   RainbowKit v2 exposes no prop for a logo in the connect modal — `appInfo`
+   carries `appName`, `learnMoreUrl` and `disclaimer` and nothing else — so the
+   mark is placed with CSS against `#rk_connect_title`, the id RainbowKit puts on
+   the modal heading for `aria-labelledby`.
+
+   This is the one rule in this file that reaches into RainbowKit's DOM, and it
+   is deliberately the cheapest possible dependency on it: if the id ever
+   changes, the selector stops matching and the modal simply renders without the
+   mark. Nothing breaks, nothing is mispositioned, no interaction is lost.
+
+   The image is a custom property so a host can point it at its own asset, or
+   set it to `none` to switch the branding off entirely.
+   ============================================================================ */
+
+[data-rk] #rk_connect_title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+[data-rk] #rk_connect_title::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  /* The Gully Chain icon, kit v4 logo/gc-icon.svg byte for byte (base64, so no re-encoding touches it), inlined so
+     it renders on any host. apps/web/test/brandSweep.test.ts holds the decoded bytes to the kit's file. Never redraw it. */
+  background-image: var(--gullycore-connect-logo, url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiB4bWxuczpjMnBhPSJodHRwOi8vYzJwYS5vcmcvbWFuaWZlc3QiPjxtZXRhZGF0YT48YzJwYTptYW5pZmVzdD5BQUFXZ21wMWJXSUFBQUFlYW5WdFpHTXljR0VBRVFBUWdBQUFxZ0E0bTNFRFl6SndZUUFBQUJaY2FuVnRZZ0FBQUVkcWRXMWtZekp0WVFBUkFCQ0FBQUNxQURpYmNRTjFjbTQ2WXpKd1lUcGtNRGd3WW1JMk15MDJPV1kxTFRRMVlqa3RPVEF4WXkxa01tTmpZalkzTnpNMU5qWUFBQUFEbDJwMWJXSUFBQUFwYW5WdFpHTXlZWE1BRVFBUWdBQUFxZ0E0bTNFRFl6SndZUzVoYzNObGNuUnBiMjV6QUFBQUFMeHFkVzFpQUFBQVJHcDFiV1JqWW05eUFCRUFFSUFBQUtvQU9KdHhFMk15Y0dFdWFXNW5jbVZrYVdWdWRDNTJNd0FBQUFBWVl6SnphSS9IazVma0Z0Q0JzNEtnUTNKcjA5OEFBQUJ3WTJKdmNxTnBaR002Wm05eWJXRjBiV2x0WVdkbEwzTjJaeXQ0Yld4cWFXNXpkR0Z1WTJWSlJIZ3NlRzF3T21scFpEcGtZMlEwWkRaaE9DMHlOekF5TFRRM05HSXRPVEZrTmkwMk1EbGxOMlE0T1RJME1tTnNjbVZzWVhScGIyNXphR2x3YUhCaGNtVnVkRTltQUFBQjRtcDFiV0lBQUFCQmFuVnRaR05pYjNJQUVRQVFnQUFBcWdBNG0zRVRZekp3WVM1aFkzUnBiMjV6TG5ZeUFBQUFBQmhqTW5Ob09DaEhGQ0pHaEF3UEYrUnlqd3VYTXdBQUFabGpZbTl5b21kaFkzUnBiMjV6Z3FKbVlXTjBhVzl1YTJNeWNHRXViM0JsYm1Wa2FuQmhjbUZ0WlhSbGNuT2hhMmx1WjNKbFpHbGxiblJ6Z2FKamRYSnNlQzF6Wld4bUkycDFiV0ptUFdNeWNHRXVZWE56WlhKMGFXOXVjeTlqTW5CaExtbHVaM0psWkdsbGJuUXVkak5rYUdGemFGZ2djclJ1Um1ibmJibVdDVWlMV1p5UmdpYUdMd01qalp4d1lPWmVkZ0ozU0wra1ptRmpkR2x2Ym5nZFkyOXRMbUZ1ZEdoeWIzQnBZeTVqYkdGMVpHVXVjSEp2ZG1sa1pXUnFjR0Z5WVcxbGRHVnljNkY0SDJOdmJTNWhiblJvY205d2FXTXViM0pwWjJsdUxXTnZibVpwWkdWdVkyVm5kVzVyYm05M2JtdGtaWE5qY21sd2RHbHZibmhtUTJ4aGRXUmxJSEJ5YjNacFpHVmtJSFJvYVhNZ1ptbHNaU0JoZENCMGFHVWdjbVZ4ZFdWemRDQnZaaUJoSUhWelpYSWdZVzVrSUcxaGVTQm9ZWFpsSUdOeVpXRjBaV1FnYjNJZ2JXOWthV1pwWldRZ2RHaGxJR1pwYkdVZ1kyOXVkR1Z1ZEhNdWJYTnZablIzWVhKbFFXZGxiblNoWkc1aGJXVm1RMnhoZFdSbGNtRnNiRUZqZEdsdmJuTkpibU5zZFdSbFpQVUFBQURJYW5WdFlnQUFBRUJxZFcxa1kySnZjZ0FSQUJDQUFBQ3FBRGliY1JOak1uQmhMbWhoYzJndVpHRjBZUUFBQUFBWVl6SnphRUQ5SjBmS2RtU2FjN3ZSSUQxdlVFRUFBQUNBWTJKdmNxVmpZV3huWm5Ob1lUSTFObU53WVdSTkFBQUFBQUFBQUFBQUFBQUFBR1JvWVhOb1dDRFFaSnBScStnTGZ3NUZyalE3d1MzKzl4czY5UlVuSTJIUVZscEVNdWlnYjJSdVlXMWxibXAxYldKbUlHMWhibWxtWlhOMGFtVjRZMngxYzJsdmJuT0JvbVZ6ZEdGeWRCakZabXhsYm1kMGFCa2VCQUFBQWo1cWRXMWlBQUFBSjJwMWJXUmpNbU5zQUJFQUVJQUFBS29BT0p0eEEyTXljR0V1WTJ4aGFXMHVkaklBQUFBQ0QyTmliM0tsWTJGc1oyWnphR0V5TlRacGMybG5ibUYwZFhKbGVFMXpaV3htSTJwMWJXSm1QUzlqTW5CaEwzVnlianBqTW5CaE9tUXdPREJpWWpZekxUWTVaalV0TkRWaU9TMDVNREZqTFdReVkyTmlOamMzTXpVMk5pOWpNbkJoTG5OcFoyNWhkSFZ5WldwcGJuTjBZVzVqWlVsRWVDeDRiWEE2YVdsa09qTmlOVE00T0RNM0xUaGhabU10TkRjNU55MDROR1l3TFdReU5ERmlaV1V5TVdObE5YSmpjbVZoZEdWa1gyRnpjMlZ5ZEdsdmJuT0RvbU4xY214NExYTmxiR1lqYW5WdFltWTlZekp3WVM1aGMzTmxjblJwYjI1ekwyTXljR0V1YVc1bmNtVmthV1Z1ZEM1Mk0yUm9ZWE5vV0NCeXRHNUdadWR0dVpZSlNJdFpuSkdDSm9ZdkF5T05uSEJnNWw1MkFuZEl2NkpqZFhKc2VDcHpaV3htSTJwMWJXSm1QV015Y0dFdVlYTnpaWEowYVc5dWN5OWpNbkJoTG1GamRHbHZibk11ZGpKa2FHRnphRmdnRm1rZkdJSUU1Y3VIYTZpSXNBb3Y3NnZvMjN3Q0dpQ21nUnFVVTEyMGlkbWlZM1Z5YkhncGMyVnNaaU5xZFcxaVpqMWpNbkJoTG1GemMyVnlkR2x2Ym5Ndll6SndZUzVvWVhOb0xtUmhkR0ZrYUdGemFGZ2drMlkyR1JNeXd4UWxNeFpFNDBxU0l5VTNlaWdVakdYS1VTTzMvUzBtOVpWMFkyeGhhVzFmWjJWdVpYSmhkRzl5WDJsdVptK2paRzVoYldWdlFXNTBhSEp2Y0dsaklFWnBiR1Z6WjNabGNuTnBiMjVsTVM0d0xqQnJjM0JsWTFabGNuTnBiMjVsTWk0MExqQUFBQkE0YW5WdFlnQUFBQ2hxZFcxa1l6Smpjd0FSQUJDQUFBQ3FBRGliY1FOak1uQmhMbk5wWjI1aGRIVnlaUUFBQUJBSVkySnZjdEtFV1FJU29nRW1HQ0ZaQWdvd2dnSUdNSUlCamFBREFnRUNBaFJBNWFBSzdzSTUwTDY0Zy9vR1FnVTlaMVVUQURBS0JnZ3Foa2pPUFFRREF6QkpNUmN3RlFZRFZRUUtFdzVCYm5Sb2NtOXdhV01zSUZCQ1F6RXVNQ3dHQTFVRUF4TWxRVzUwYUhKdmNHbGpJRU52Ym5SbGJuUWdRM0psWkdWdWRHbGhiSE1nVW05dmRDQkRRVEFlRncweU5qQTRNRGN4T0RRek5UWmFGdzB5T0RBNE1EWXhPVFF6TlRaYU1FUXhGekFWQmdOVkJBb1REa0Z1ZEdoeWIzQnBZeXdnVUVKRE1Ta3dKd1lEVlFRREV5QkJiblJvY205d2FXTWdRMnhoZFdSbElFTnZiblJsYm5RZ1UybG5ibWx1WnpCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OUF3RUhBMElBQkpoNkNtdkxVQmdGRk5VMHZVS2xPVnRFNmRqZDE3TDVTdXdYMExlbUZpc0JNM2RrZC8zY3lqeEZBM1FvNVM0NmZYMC9paFkwVlo3bWZiOUtGNzAzdDVPaldEQldNQTRHQTFVZER3RUIvd1FFQXdJSGdEQVZCZ05WSFNVRURqQU1CZ29yQmdFRUFZUG9YZ0lCTUF3R0ExVWRFd0VCL3dRQ01BQXdId1lEVlIwakJCZ3dGb0FVemxIaUJJRk9aRnNqK09QRXo1bytuTUhYWE1Jd0NnWUlLb1pJemowRUF3TURad0F3WkFJd01YTWRGSjRCZXRMTFZZN09SdUU5bm9xYmJBWk9abi9hQXJYeVR3RkFaZktyUHp4RjJ2UG9KTmYxK1VDZGcxWEdBakJ3WDF6ZDlXR3FZa3FtTDVTRnF3MVF5U2pyMXpKZnBKTTkrMXJkRHdTUExNT1BPakt1aVhqb1UvcFVVZUc5UndtaFkzQmhaRmtObmdBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFQWllRUHUvdDJZcE1Sbjc3S3FrSTBmOXdKRWJHdG9EY2xlaXdEdHhYMGtsWnMxdHNJVE0ydW11c2xWK0J3dzE3TmdHdldndlVvMFBVU0RCcElUUUpJRzFLOFU9PC9jMnBhOm1hbmlmZXN0PjwvbWV0YWRhdGE+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMjQiIGhlaWdodD0iMTAyNCIgZmlsbD0iI0ZENzcxNiI+PC9yZWN0PjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMCkgc2NhbGUoNC43NDA3NDA3NDA3NDA3NDA1KSI+PHBhdGggZmlsbD0iIzBGMEUwQiIgZD0iTTE4MiA2NS41TDEwOSAyMEwzNCA2Ni41VjE0OS41TDEwOSAxOTZMMTgyIDE1MC41TDE1OCAxMzZMMTA5IDE2NS41TDU4IDEzNFY4MkwxMDkgNTAuNUwxNTggODBaIj48L3BhdGg+PHJlY3QgeD0iODYiIHk9Ijg1IiB3aWR0aD0iNDYiIGhlaWdodD0iNDYiIGZpbGw9IiNGRUY0RTMiPjwvcmVjdD48L2c+PC9zdmc+"));
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}

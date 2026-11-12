@@ -1,6 +1,6 @@
 {
   "name": "@gullylabs/core-sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "MIT TypeScript SDK for Gully Core on Anubis, Robinhood Chain, Base, BNB Chain, Kinetiq Elysium and Gully Chain Testnet: the deployed contract address book, pool key/id derivation, hook permission bitmaps, typed events, quotes and the Gully Core registry. Build hooks without importing GPL Solidity.",
   "license": "MIT",
   "homepage": "https://docs.gullycore.xyz",

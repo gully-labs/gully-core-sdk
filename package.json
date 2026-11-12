@@ -13,6 +13,9 @@
     "smoke": "node scripts/smoke-pack.mjs",
     "publish:dry": "bash scripts/publish.sh --dry-run"
   },
+  "devDependencies": {
+    "ox": "0.14.65"
+  },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild"]
   }

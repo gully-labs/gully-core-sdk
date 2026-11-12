@@ -1,11 +1,12 @@
 {
   "name": "@gullylabs/core-cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "The gullycore command: swap, pools, liquidity, launches, locks, fees and chains on Gully Core from a terminal, simulated and guarded, plus hosted sites, airdrops, splits and hook scaffolding. MIT; signs only with an encrypted keystore or a hardware wallet, never a raw key.",
   "license": "MIT",
   "homepage": "https://docs.gullycore.xyz",
   "type": "module",
   "bin": {
+    "core-cli": "./dist/bin/gullycore.js",
     "create-gully-core-hook": "./dist/bin/create-gully-core-hook.js",
     "gullycore": "./dist/bin/gullycore.js"
   },

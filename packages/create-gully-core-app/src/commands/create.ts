@@ -21,9 +21,8 @@ import { CLI_VERSION } from "../version.js";
 const HELP = `
 ${bold("@gullylabs/create-core-app")} — the Gully Core app template (DEX, Launchpad or both) on Gully Core's shared core.
 
-  ${cyan("node packages/create-gully-core-app/dist/bin/create-app.js")} <directory> [options]   (from a checkout)
-  ${cyan("npm create @gullylabs/core-app")} <directory> -- [options]      (once the package is on npm)
-  ${cyan("npx @gullylabs/create-core-app")} <directory> [options]         (once the package is on npm)
+  ${cyan("npm create @gullylabs/core-app")} <directory> -- [options]
+  ${cyan("npx @gullylabs/create-core-app")} <directory> [options]
 
 ${bold("Options")}
   --chain <name|id>        Chain to point at. Deployed: ${

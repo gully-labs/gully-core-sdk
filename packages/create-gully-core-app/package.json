@@ -1,6 +1,6 @@
 {
   "name": "@gullylabs/create-core-app",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "The Gully Core app template: scaffold a DEX, a Launchpad or both on Gully Core's shared core. npm create @gullylabs/core-app. MIT, one config file, no core deployment.",
   "license": "MIT",
   "homepage": "https://docs.gullycore.xyz",

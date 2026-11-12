@@ -342,7 +342,7 @@ export default defineGullyCoreDex({
 
        apiKey: import.meta.env.VITE_GULLYCORE_ROUTER_KEY,
 
-     Keys are self-serve at https://gullychain.xyz/core/developers (wallet sign-in).
+     Keys are self-serve at https://app.gullycore.xyz/app/developers (wallet sign-in).
      A VITE_ value is compiled into the public bundle, so whoever loads the
      site can read the key and spend its rate limit; it can only read and
      quote, and it is revocable there. See .env.example before setting it.

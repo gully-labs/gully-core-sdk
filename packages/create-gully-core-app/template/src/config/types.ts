@@ -318,7 +318,7 @@ export interface RoutingConfig {
    * An API key with the `router:quote` scope, for a per-key rate limit instead
    * of the anonymous one. Read it from the environment
    * (`import.meta.env.VITE_GULLYCORE_ROUTER_KEY`); never commit one. Self-serve at
-   * https://gullychain.xyz/core/developers. A `VITE_` value ships in the public bundle:
+   * https://app.gullycore.xyz/app/developers. A `VITE_` value ships in the public bundle:
    * anyone can read it and spend its rate limit (it can only read and quote, and
    * is revocable there).
    */

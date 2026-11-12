@@ -121,7 +121,7 @@ routing: {
 ```
 
 * **A key is optional, and public once set.** Anonymous quotes work, rate-limited per
-  address. A key from <https://gullychain.xyz/core/developers> (sign in with a wallet; up to 3
+  address. A key from <https://app.gullycore.xyz/app/developers> (sign in with a wallet; up to 3
   keys, scopes `public:read` + `router:quote`, the secret shown once) gets a per-key
   limit instead. A `VITE_` variable is compiled into the bundle every visitor downloads,
   so anyone can read the key and spend its limit. It cannot move funds and is revocable

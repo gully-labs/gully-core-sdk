@@ -1,0 +1,637 @@
+// SPDX-License-Identifier: MIT
+/**
+ * Drop-in launch widget: a launch-aware swap panel.
+ *
+ * A Gully Core launch is a pool with `LaunchGuardHook` attached and a fee that
+ * decays from `initialFeePips` to `finalFeePips` over the launch window (seconds
+ * on the timestamp hook, contract blocks on the block-numbered one). On some
+ * launches that fee is the pool's own LP fee; on others it is paid in the
+ * pool's quote currency and the launch takes it itself, leaving the pool's
+ * liquidity providers a share of what a buy pays (`core/launchCharges.ts`).
+ * The widget says which, in which currency, and who receives which part.
+ * Buying into one is an ordinary swap, so the bottom half of this component is
+ * the swap path — the same router, the same plan, the same integrator fee step.
+ *
+ * The top half is the only part that is launch-specific, and it exists because
+ * the thing a buyer needs to know before pressing Buy is *when* they are:
+ *
+ * - Trading may not be open. Before the start every swap reverts.
+ * - The fee right now may be enormous. That is the sniper tax working as
+ *   designed, and quoting it as though it were the pool's normal fee would
+ *   invite people to pay 25% without noticing.
+ * - `maxBuyPerTx` caps a TRANSACTION, not a wallet. The hook's own source says
+ *   splitting a buy across transactions or wallets "is NOT prevented and cannot
+ *   be", and a UI that showed it as "your remaining allocation" would be
+ *   claiming a protection nobody has.
+ *
+ * Everything rendered here was read from the hook. Nothing is defaulted: where
+ * a value is missing, the widget says which value and why.
+ */
+
+import type { ReactElement } from "react";
+import { useCallback, useMemo, useState, type FormEvent } from "react";
+import type { PoolId } from "@gullylabs/core-sdk";
+import type { Address } from "viem";
+import { useWidgetContext } from "../context/WidgetProvider.js";
+import { formatBps } from "../config/integrator.js";
+import {
+  formatAmount,
+  formatPercentFromBps,
+  formatPercentFromPips,
+  formatRate,
+  parseAmount,
+  shortAddress,
+} from "../core/format.js";
+import { humanDuration } from "@gullylabs/core-sdk";
+import { launchFeeTakenBy, launchFeeWords, taxLine } from "../core/launchCharges.js";
+import {
+  launchFeeAt,
+  type DurationClock,
+  type LaunchGuard,
+  type LaunchSchedule,
+} from "../callpath/launch.js";
+
+/** A span on the hook's clock, in words: exact seconds, or contract blocks. */
+function clockSpan(clock: DurationClock, units: bigint | number): string {
+  return clock === "timestamp" ? humanDuration(Number(units)) : `${units.toLocaleString()} blocks`;
+}
+
+/** A point on the hook's clock: a UTC time with its raw value, or a contract block. */
+function pointOnClock(clock: DurationClock, value: bigint): string {
+  return clock === "timestamp"
+    ? `${new Date(Number(value) * 1000).toISOString().replace("T", " ").slice(0, 19)} UTC`
+    : `block ${value.toLocaleString()}`;
+}
+import {
+  buildLaunchView,
+  resolveLaunchDataState,
+  useLaunch,
+  useLaunchBuy,
+  useLaunchList,
+  useLaunchesForToken,
+  type LaunchDataState,
+  type LaunchView,
+} from "../hooks/useLaunch.js";
+import { useAccount, useTokenBalance } from "../hooks/useTokens.js";
+import {
+  ActionButton,
+  AmountField,
+  ErrorPanel,
+  ProgressBar,
+  StatusRegion,
+  SummaryList,
+  SummaryRow,
+  WidgetShell,
+} from "./primitives.js";
+import type { LaunchInfo } from "../adapters/protocol.js";
+
+/** Props for {@link LaunchWidget}. */
+export interface LaunchWidgetProps {
+  /**
+   * The launch pool, by pool id. When omitted, the first launch the adapter
+   * lists is used.
+   *
+   * A pool id, not a contract address: `LaunchGuardHook` serves many pools and
+   * keys everything it knows by `PoolId`.
+   */
+  readonly poolId?: PoolId;
+  readonly title?: string;
+  readonly onPurchaseConfirmed?: (hash: string) => void;
+  /**
+   * Makes the "Connect wallet" call to action a working button that opens
+   * the host's connect flow. Absent (and absent on the provider too), the CTA
+   * is a disabled label and the visitor connects through the host's control.
+   */
+  readonly onConnectRequest?: () => void;
+}
+
+/** The styled launch widget. */
+export function LaunchWidget(props: LaunchWidgetProps): ReactElement {
+  const { chain, integrator, onConnectRequest: providerConnect } = useWidgetContext();
+  const onConnectRequest = props.onConnectRequest ?? providerConnect;
+
+  const list = useLaunchList();
+  const poolId = props.poolId ?? list.data?.[0]?.poolId ?? null;
+  const launchResource = useLaunch(poolId);
+  const launch = launchResource.data;
+
+  const listState = resolveLaunchDataState(list);
+  const launchState = resolveLaunchDataState(launchResource);
+  const state: LaunchDataState =
+    props.poolId !== undefined ? launchState : listState !== "ready" ? listState : launchState;
+
+  const accountResource = useAccount();
+  const account = accountResource.data;
+
+  const [amountText, setAmountText] = useState("");
+  const parsed =
+    launch === null || amountText.trim() === ""
+      ? null
+      : parseAmount(amountText, launch.quoteToken.decimals);
+  const amountIn = parsed !== null && parsed.ok ? parsed.value : null;
+
+  const balance = useTokenBalance(launch?.quoteToken ?? null, account);
+
+  const buy = useLaunchBuy({
+    launch,
+    amountIn,
+    ...(props.onPurchaseConfirmed ? { onSuccess: props.onPurchaseConfirmed } : {}),
+  });
+
+  const view = useMemo<LaunchView | null>(
+    () => (launch === null ? null : buildLaunchView(launch)),
+    [launch],
+  );
+
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (buy.execution.needsApproval) {
+        void buy.execution.approve();
+        return;
+      }
+      void buy.execution.execute();
+    },
+    [buy.execution],
+  );
+
+  const title = props.title ?? (launch === null ? "Launch" : `${launch.launchToken.symbol} launch`);
+  const subtitle = `Gully Core · ${chain.name}`;
+
+  if (launch === null || view === null) {
+    return (
+      <WidgetShell title={title} subtitle={subtitle}>
+        <LaunchUnavailable
+          state={state}
+          chainName={chain.name}
+          error={props.poolId !== undefined ? launchResource.error : (list.error ?? launchResource.error)}
+        />
+      </WidgetShell>
+    );
+  }
+
+  const { schedule } = view;
+  const insufficientBalance =
+    amountIn !== null && balance.data !== null && amountIn > balance.data;
+
+  const busy =
+    buy.execution.step === "approving" ||
+    buy.execution.step === "building" ||
+    buy.execution.step === "awaiting-signature" ||
+    buy.execution.step === "pending";
+
+  const buttonLabel = buy.execution.needsApproval
+    ? `Approve ${buy.execution.approvals[0]?.token.symbol ?? launch.quoteToken.symbol}`
+    : account === null
+      ? "Connect wallet"
+      : buy.gate.message !== null
+        ? buy.gate.message
+        : insufficientBalance
+          ? `Insufficient ${launch.quoteToken.symbol}`
+          : `Buy ${launch.launchToken.symbol}`;
+
+  const canSubmit =
+    account !== null &&
+    !insufficientBalance &&
+    (buy.execution.needsApproval || (buy.canBuy && (parsed === null || parsed.ok)));
+
+  const statusMessage =
+    buy.execution.statusMessage !== ""
+      ? buy.execution.statusMessage
+      : buy.gate.message !== null
+        ? `${buy.gate.message}${buy.gate.revert === null ? "" : ` — the hook reverts ${buy.gate.revert}`}`
+        : buy.quoteStatus === "loading"
+          ? "Fetching a quote"
+          : insufficientBalance
+            ? `Insufficient ${launch.quoteToken.symbol}`
+            : "";
+
+  const statusTone =
+    buy.execution.step === "error" ||
+    buy.quoteStatus === "error" ||
+    buy.gate.reason !== null ||
+    insufficientBalance
+      ? "error"
+      : buy.execution.step === "success"
+        ? "success"
+        : "neutral";
+
+  return (
+    <WidgetShell title={title} subtitle={subtitle}>
+      <LaunchSchedulePanel view={view} />
+
+      <FeeDecayChart guard={launch.guard} schedule={schedule} />
+
+      <MaxBuyNotice launch={launch} schedule={schedule} />
+
+      <form onSubmit={handleSubmit} noValidate>
+        <AmountField
+          label={`You pay (${launch.quoteToken.symbol})`}
+          value={amountText}
+          onValueChange={setAmountText}
+          token={launch.quoteToken}
+          tokens={[launch.quoteToken]}
+          balance={balance.data}
+          error={
+            parsed !== null && !parsed.ok
+              ? parsed.message
+              : insufficientBalance
+                ? "Insufficient balance"
+                : null
+          }
+        />
+
+        <AmountField
+          label={`You receive (${launch.launchToken.symbol})`}
+          value={
+            buy.breakdown === null
+              ? ""
+              : formatAmount(buy.breakdown.netAmountOut, launch.launchToken.decimals)
+          }
+          readOnly
+          token={launch.launchToken}
+          tokens={[launch.launchToken]}
+          secondaryText={buy.quoteIsRefreshing ? "Updating quote..." : ""}
+        />
+
+        {buy.breakdown !== null ? (
+          <SummaryList>
+            <SummaryRow
+              label="Rate"
+              value={formatRate(buy.rate, launch.quoteToken.symbol, launch.launchToken.symbol)}
+            />
+            <SummaryRow
+              label="Price impact"
+              value={formatPercentFromBps(buy.breakdown.priceImpactBps)}
+              severity={buy.breakdown.priceImpactSeverity}
+            />
+            {launchFeeTakenBy(launch.pool) === "launch" ? (
+              <SummaryRow
+                label="Trading fee"
+                value={`${formatPercentFromPips(launch.currentFeePips)} · paid in ${launch.quoteToken.symbol}`}
+                title={`${launchFeeWords(buy.charges?.feeParts ?? null, `in ${launch.quoteToken.symbol}`)} The quoted output already includes it.`}
+              />
+            ) : (
+              <SummaryRow
+                label="Launch fee charged"
+                value={formatPercentFromPips(launch.currentFeePips)}
+                title="The LP fee the hook is overriding this pool with right now. It goes to the pool's liquidity providers, not to the hook."
+              />
+            )}
+            {(() => {
+              /* A buy, always: this widget only buys. The tax is its own line, never part of the fee or the impact. */
+              const tax = taxLine("buy", undefined, buy.charges ?? undefined);
+              return tax === null ? null : <SummaryRow label={tax.label} value={tax.value} title={tax.hint} />;
+            })()}
+            {integrator.active ? (
+              <SummaryRow
+                label={`Integrator fee (${formatBps(integrator.feeBps)})`}
+                value={`${formatAmount(buy.breakdown.integratorFee, launch.launchToken.decimals)} ${launch.launchToken.symbol} → ${shortAddress(integrator.referrer)}`}
+                emphasis="fee"
+                title="Paid to the site hosting this widget, inside the same transaction as the buy."
+              />
+            ) : null}
+            <SummaryRow
+              label="Minimum received"
+              value={`${formatAmount(buy.breakdown.minAmountOutNet, launch.launchToken.decimals)} ${launch.launchToken.symbol}`}
+              title="Guaranteed floor after slippage and the integrator fee. The transaction reverts below this."
+            />
+          </SummaryList>
+        ) : null}
+
+        <StatusRegion message={statusMessage} tone={statusTone} />
+
+        <ActionButton type="submit" disabled={!canSubmit} busy={busy} needsConnect={account === null} {...(onConnectRequest === undefined ? {} : { onConnectRequest })}>
+          {buttonLabel}
+        </ActionButton>
+      </form>
+
+      <ErrorPanel error={buy.execution.error ?? buy.quoteError} />
+
+      {buy.execution.txHash !== null ? (
+        <p className="gullycore-footer">
+          <span>Transaction</span>
+          <span>{shortAddress(buy.execution.txHash)}</span>
+        </p>
+      ) : null}
+    </WidgetShell>
+  );
+}
+
+/**
+ * The four not-ready states, each with its own sentence.
+ *
+ * `not-configured` is the one worth being careful about. On a chain where no
+ * `LaunchGuardHook` is deployed there is no address to read and none may be
+ * invented, so the honest answer is that the feature is absent here — not that
+ * something failed, and not an example launch.
+ */
+export function LaunchUnavailable(props: {
+  readonly state: LaunchDataState;
+  readonly chainName: string;
+  readonly error: Error | null;
+}): ReactElement {
+  switch (props.state) {
+    case "loading":
+      return <StatusRegion message="Loading the launch schedule…" tone="neutral" />;
+    case "not-configured":
+      return (
+        <div className="gullycore-summary">
+          <StatusRegion
+            message={`Launches are coming soon on ${props.chainName}.`}
+            tone="neutral"
+          />
+        </div>
+      );
+    case "empty":
+      return (
+        <div className="gullycore-summary">
+          <StatusRegion message="No launch is registered for this pool." tone="neutral" />
+          <p className="gullycore-subtitle">
+            The hook answered and holds no launch record. A pool id is only claimed when someone
+            calls <code>configureLaunch</code>, and the hook refuses to let a pool be initialized
+            before that happens.
+          </p>
+        </div>
+      );
+    case "error":
+      return (
+        <div className="gullycore-summary">
+          <StatusRegion
+            message={props.error?.message ?? "Couldn't load this launch. Try again."}
+            tone="error"
+            assertive
+          />
+          <p className="gullycore-subtitle">
+            Nothing is shown in place of the schedule. Retry when the chain is reachable.
+          </p>
+        </div>
+      );
+    default:
+      return <StatusRegion message="Loading" tone="neutral" />;
+  }
+}
+
+/** The schedule, in the unit the hook stores it in. */
+export function LaunchSchedulePanel(props: { readonly view: LaunchView }): ReactElement {
+  const { launch, schedule, feeSpanProgressBps, feeProjectionDriftPips } = props.view;
+
+  return (
+    <>
+      <SummaryList>
+        <SummaryRow label="Phase" value={describePhase(schedule, launchFeeTakenBy(launch.pool))} />
+        <SummaryRow
+          label="Fee right now"
+          value={`${formatPercentFromPips(launch.currentFeePips)}${launchFeeTakenBy(launch.pool) === "launch" ? ` · paid in ${launch.quoteToken.symbol}` : ""}`}
+          title="Live from the chain."
+        />
+        <SummaryRow
+          label="Fee schedule"
+          value={
+            schedule.initialFeePips === null || schedule.finalFeePips === null
+              ? "unknown"
+              : `${formatPercentFromPips(schedule.initialFeePips)} → ${formatPercentFromPips(schedule.finalFeePips)} over ${clockSpan(schedule.durationClock, launch.guard.window)}`
+          }
+        />
+        <SummaryRow
+          label="Opens at"
+          value={schedule.start === null ? "unknown" : pointOnClock(schedule.durationClock, schedule.start)}
+          title="Trading opens at this time; swaps before it are refused."
+        />
+        <SummaryRow
+          label={schedule.untilOpen !== null ? "Until open" : "Left in decay"}
+          value={
+            schedule.untilOpen !== null
+              ? clockSpan(schedule.durationClock, schedule.untilOpen)
+              : schedule.remaining !== null
+                ? clockSpan(schedule.durationClock, schedule.remaining)
+                : "none — the fee has settled"
+          }
+        />
+        <SummaryRow
+          label="Launch owner"
+          value={shortAddress(launch.guard.owner)}
+          title="Set when the launch was configured. It cannot change anything once trading opens."
+        />
+      </SummaryList>
+
+      {feeSpanProgressBps !== null ? (
+        <div className="gullycore-field">
+          <span className="gullycore-label">Fee decay</span>
+          <ProgressBar label="Fee decay progress" percent={feeSpanProgressBps / 100} />
+          <div className="gullycore-meta">
+            <span>{(feeSpanProgressBps / 100).toFixed(1)}% of the way to the final fee</span>
+          </div>
+        </div>
+      ) : null}
+
+      {feeProjectionDriftPips !== null && feeProjectionDriftPips !== 0 ? (
+        <StatusRegion
+          message={
+            `The chain reports ${formatPercentFromPips(launch.currentFeePips)} but this page ` +
+            `projects ${formatPercentFromPips(launch.currentFeePips - feeProjectionDriftPips)}. ` +
+            "The figure above is the chain's; the curve below may be off."
+          }
+          tone="error"
+        />
+      ) : null}
+    </>
+  );
+}
+
+function describePhase(schedule: LaunchSchedule, feeTakenBy: "pool" | "launch"): string {
+  /* "LP fee" only where the fee IS the pool's; where the launch takes it, it is simply the fee. */
+  const fee = feeTakenBy === "launch" ? "fee" : "LP fee";
+  switch (schedule.phase) {
+    case "unclaimed":
+      return "No launch configured";
+    case "disabled":
+      return `Guard disabled — ${fee} pinned, no launch gate`;
+    case "pending":
+      return "Not open yet";
+    case "decaying":
+      // The guard's fee, not the creator tax (a separate, optional buy/sell rate): never call this a tax.
+      return `Open — ${fee} decaying to its floor`;
+    case "settled":
+      return "Open — fee settled";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * The per-transaction cap, said the way the contract means it.
+ *
+ * This block is not decoration. `maxBuyPerTx` is the field most likely to be
+ * mistaken for an allocation, and the hook is explicit that it is not one:
+ * "Splitting a buy across N wallets or N transactions in the same block is NOT
+ * prevented and cannot be."
+ */
+export function MaxBuyNotice(props: {
+  readonly launch: LaunchInfo;
+  readonly schedule: LaunchSchedule;
+}): ReactElement | null {
+  const { launch, schedule } = props;
+  if (schedule.maxBuyPerTx === null) {
+    return (
+      <SummaryList>
+        <SummaryRow label="Per-transaction cap" value="None configured" />
+      </SummaryList>
+    );
+  }
+  const amount = `${formatAmount(schedule.maxBuyPerTx, launch.quoteToken.decimals)} ${launch.quoteToken.symbol}`;
+  return (
+    <>
+      <SummaryList>
+        <SummaryRow
+          label="Per-transaction cap"
+          value={schedule.maxBuyPerTxEnforced ? amount : `${amount} (not enforced right now)`}
+          title="Checked by the hook on each individual swap."
+        />
+      </SummaryList>
+      <p className="gullycore-subtitle">
+        This caps one transaction. It is <strong>not</strong> a per-wallet cap and cannot be made
+        into one: the hook only ever sees the router as the caller, so it cannot tell two buyers
+        apart. Splitting a buy across several transactions or several wallets defeats it, and the
+        cap stops applying once the decay window ends.
+      </p>
+    </>
+  );
+}
+
+/**
+ * The fee decay, plotted by evaluating the hook's own function.
+ *
+ * Each sample is {@link ../callpath/launch.js | launchFeeAt}, an exact
+ * mirror of `LaunchGuardHook.feeAt` including its integer flooring — so this is
+ * the schedule, not an impression of it. No axis implies a price and no point
+ * is a prediction: every value is what the contract will charge in that block.
+ */
+export function FeeDecayChart(props: {
+  readonly guard: LaunchGuard;
+  readonly schedule: LaunchSchedule;
+}): ReactElement | null {
+  const { guard, schedule } = props;
+  const width = 320;
+  const height = 72;
+  const samples = 48;
+
+  const points = useMemo(() => {
+    if (guard.window <= 0) return [];
+    const values: number[] = [];
+    for (let i = 0; i <= samples; i += 1) {
+      const at = guard.start + (BigInt(guard.window) * BigInt(i)) / BigInt(samples);
+      values.push(launchFeeAt(guard, at) ?? guard.finalFeePips);
+    }
+    return values;
+  }, [guard]);
+
+  if (points.length === 0 || schedule.phase === "unclaimed" || schedule.phase === "disabled") {
+    return null;
+  }
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+
+  const path = points
+    .map((value, index) => {
+      const x = (index / samples) * width;
+      const y = height - ((value - min) / span) * (height - 8) - 4;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  const progressBps = schedule.decayProgressBps ?? 0;
+  const markerX = (Math.max(0, Math.min(10_000, progressBps)) / 10_000) * width;
+  const caption =
+    `${formatPercentFromPips(guard.initialFeePips)} at the open, ` +
+    `${formatPercentFromPips(guard.finalFeePips)} after ${clockSpan(guard.durationClock, guard.window)}`;
+
+  return (
+    <figure style={{ margin: 0 }}>
+      <svg
+        className="gullycore-curve"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`Launch fee decay: ${caption}. Currently ${(progressBps / 100).toFixed(0)} percent through the window.`}
+      >
+        <path d={path} fill="none" stroke="var(--gullycore-accent)" strokeWidth={2} />
+        <line
+          x1={markerX}
+          y1={0}
+          x2={markerX}
+          y2={height}
+          stroke="var(--gullycore-border-strong)"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+        />
+      </svg>
+      <figcaption className="gullycore-subtitle">{caption}</figcaption>
+    </figure>
+  );
+}
+
+/** Re-exported so hosts can type a launch prop without reaching into adapters. */
+export type { LaunchInfo };
+
+/** Props for {@link LaunchV2Widget}. */
+export interface LaunchV2WidgetProps {
+  /**
+   * The launch TOKEN, as `LaunchpadKitV2` minted it. The kit's `legsOf(token)`
+   * names every pool the launch opened, so one address finds them all; each
+   * is then read from its own guard (CL or Bin) and rendered as its own buy
+   * surface, because each pool has its own quote, fee and gate.
+   */
+  readonly token: Address;
+  readonly title?: string;
+  readonly onPurchaseConfirmed?: (hash: string) => void;
+  /** Passed to every leg's {@link LaunchWidget}; see {@link LaunchWidgetProps.onConnectRequest}. */
+  readonly onConnectRequest?: () => void;
+}
+
+/**
+ * A locked launch (`LaunchpadKitV2`), looked up by its token.
+ *
+ * One `LaunchWidget` per leg. Nothing is aggregated across legs on purpose:
+ * a CL leg and a Bin leg against the same quote are two pools with two
+ * prices, two fee schedules and two per-transaction caps, and a single number
+ * for "the" price would be an average of things that are not fungible.
+ */
+export function LaunchV2Widget(props: LaunchV2WidgetProps): ReactElement {
+  const { chain } = useWidgetContext();
+  const legs = useLaunchesForToken(props.token);
+  const state = resolveLaunchDataState(legs);
+  const subtitle = `Gully Core · ${chain.name}`;
+
+  if (state !== "ready" || legs.data === null || legs.data.length === 0) {
+    return (
+      <WidgetShell title={props.title ?? "Launch"} subtitle={subtitle}>
+        {state === "ready" || state === "empty" ? (
+          <p className="gullycore-empty">
+            The kit lists no pools for <code>{shortAddress(props.token)}</code>. Either it was not
+            launched through this kit, or the token address is wrong.
+          </p>
+        ) : (
+          <LaunchUnavailable state={state} chainName={chain.name} error={legs.error} />
+        )}
+      </WidgetShell>
+    );
+  }
+
+  const symbol = legs.data[0]?.launchToken.symbol ?? shortAddress(props.token);
+  return (
+    <div className="gullycore-launch-legs">
+      {legs.data.map((leg, index) => (
+        <LaunchWidget
+          key={leg.poolId}
+          poolId={leg.poolId}
+          title={`${props.title ?? `${symbol} launch`} · ${leg.pool.poolType === "CL" ? "concentrated" : "bin"} pool vs ${leg.quoteToken.symbol}${legs.data === null || legs.data.length === 1 ? "" : ` (${index + 1} of ${legs.data.length})`}`}
+          {...(props.onPurchaseConfirmed ? { onPurchaseConfirmed: props.onPurchaseConfirmed } : {})}
+          {...(props.onConnectRequest ? { onConnectRequest: props.onConnectRequest } : {})}
+        />
+      ))}
+    </div>
+  );
+}

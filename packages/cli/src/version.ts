@@ -6,4 +6,4 @@
  * npx, a global install and a bundler. `test/version.test.ts` fails the build if
  * this drifts from package.json.
  */
-export const CLI_VERSION = "0.3.0";
+export const CLI_VERSION = "0.3.1";
