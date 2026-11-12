@@ -54,4 +54,8 @@ export {
   parseLockBadgeAttributes,
 } from "./embed/lockBadge.js";
 
+export { BUYS_TAG, parseBuysAttributes, buysSnippet, type BuysAttributes, type BuysLayout, type BuysTheme } from "./buys/model.js";
+export { GullyBuysElement, defineGullyBuys, BUYS_CSS } from "./buys/element.js";
+export { BuysSource, type BuysState } from "./buys/source.js";
+
 export { WIDGET_CSS, injectWidgetStyles } from "./styles/css.js";
