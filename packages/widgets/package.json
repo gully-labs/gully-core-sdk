@@ -1,7 +1,7 @@
 {
   "name": "@gullylabs/core-widgets",
-  "version": "0.3.0",
-  "description": "Embeddable swap, liquidity and launch widgets for Gully Core. Headless controllers plus drop-in styled UI, with first-class integrator fee attribution.",
+  "version": "0.4.0",
+  "description": "Embeddable swap, liquidity, launch and buy-alert widgets for Gully Core. Headless controllers plus drop-in styled UI, with first-class integrator fee attribution.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,7 +26,9 @@
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json",
     "./gullycore-embed.js": "./dist/gullycore-embed.js",
-    "./gullycore-embed.mjs": "./dist/gullycore-embed.mjs"
+    "./gullycore-embed.mjs": "./dist/gullycore-embed.mjs",
+    "./buys.js": "./dist/buys.js",
+    "./buys.mjs": "./dist/buys.mjs"
   },
   "files": [
     "dist",
@@ -41,12 +43,13 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "vite build && vite build --config vite.embed.config.ts && tsc -p tsconfig.build.json && node scripts/emit-css.mjs",
+    "build": "vite build && vite build --config vite.embed.config.ts && vite build --config vite.buys.config.ts && tsc -p tsconfig.build.json && node scripts/emit-css.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "build:embed": "vite build --config vite.embed.config.ts"
+    "build:embed": "vite build --config vite.embed.config.ts",
+    "build:buys": "vite build --config vite.buys.config.ts"
   },
   "keywords": [
     "gullycore",
