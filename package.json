@@ -17,6 +17,13 @@
     "ox": "0.14.65"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": ["esbuild"],
+    "overrides": {
+      "ws": "^8.21.3",
+      "decode-uri-component": "^0.5.1",
+      "vitest>vite": "^6.4.4",
+      "vite-node>vite": "^6.4.4",
+      "vitest>tinypool": "^2.1.2"
+    }
   }
 }
