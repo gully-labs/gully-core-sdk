@@ -252,6 +252,37 @@ describe("the template itself", () => {
     }
   });
 
+  it("only asks for @gullylabs versions that are published on npm", async () => {
+    // Bump a version here in the same change that publishes it. A range that
+    // no published version satisfies makes `npm install` fail in every fresh app.
+    const PUBLISHED: Record<string, string[]> = {
+      "@gullylabs/core-sdk": ["0.3.0", "0.3.1"],
+      "@gullylabs/core-connect": ["0.2.0"],
+      "@gullylabs/core-widgets": ["0.3.0"],
+    };
+    const pkg = JSON.parse(await readFile(join(templateRoot(), "package.json"), "utf8")) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    const own = Object.entries(deps).filter(([name]) => name.startsWith("@gullylabs/"));
+    expect(own.length).toBeGreaterThan(0);
+    for (const [name, range] of own) {
+      const published = PUBLISHED[name];
+      if (!published) throw new Error(`${name} is not in the published list of this test`);
+      const m = /^\^(\d+)\.(\d+)\.(\d+)$/.exec(range);
+      expect(m, `${name} range ${range} must be a plain caret range`).not.toBeNull();
+      const [maj, min, pat] = [Number(m![1]), Number(m![2]), Number(m![3])];
+      const ok = (v: string): boolean => {
+        const [a, b, c] = v.split(".").map(Number) as [number, number, number];
+        if (maj > 0) return a === maj && (b > min || (b === min && c >= pat));
+        if (min > 0) return a === 0 && b === min && c >= pat;
+        return a === 0 && b === 0 && c === pat;
+      };
+      expect(published.some(ok), `${name}@${range} matches no published version`).toBe(true);
+    }
+  });
+
   it("ships no .env and no lockfile", async () => {
     const files = await listFiles(templateRoot());
     expect(files).not.toContain(".env");
