@@ -28,3 +28,4 @@ export * from "./multisend.js";
 export * from "./merkle.js";
 export * from "./drop.js";
 export * from "./holders.js";
+export * from "./product.js";
