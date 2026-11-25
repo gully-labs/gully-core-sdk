@@ -1,0 +1,49 @@
+{
+ "repo": "gully-core-sdk",
+ "product": "gully-core",
+ "checks": [
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-485590.json",
+   "chain": "485590",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-6714.json",
+   "chain": "6714",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-4663.json",
+   "chain": "4663",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-8453.json",
+   "chain": "8453",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-56.json",
+   "chain": "56",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-99901.json",
+   "chain": "99901",
+   "complete": true
+  },
+  {
+   "type": "addresses",
+   "file": "packages/sdk/records/gully-core-solana-devnet.json",
+   "chain": "solana-devnet",
+   "select": "programs",
+   "complete": true
+  }
+ ]
+}
