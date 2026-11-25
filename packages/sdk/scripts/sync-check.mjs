@@ -20,6 +20,7 @@ import { KIT, TOP_LEVEL } from "./generate-deployments.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const CHAIN_IDS = [6714, 4663, 8453, 56, 99901, 485590];
+export const SOLANA_CLUSTERS = ["devnet"];
 const DEFAULT_DEPLOYMENTS = "https://raw.githubusercontent.com/gully-labs/gully-core/main/deployments";
 const DEFAULT_MANIFEST = "https://gullycore.xyz/manifest.json";
 
@@ -86,6 +87,32 @@ export async function syncCheck({ deployments = process.env.GULLYCORE_DEPLOYMENT
       }
     }
     row(id, "built address book == record (every mapped contract)", problems);
+  }
+  /* Gully Core on Solana (devnet only): records/gully-core-solana-<cluster>.json (a byte copy of the gully-ops record)
+     == the manifest's `solana` block, and the built @gullylabs/core-sdk/solana book == the record. */
+  for (const cluster of SOLANA_CLUSTERS) {
+    const rec = JSON.parse(readFileSync(join(root, "records", `gully-core-solana-${cluster}.json`), "utf8"));
+    const mc = (m.solana?.clusters ?? []).find((c) => c.cluster === cluster);
+    const addr = (o) => Object.fromEntries(Object.entries(o ?? {}).map(([k, v]) => [k, v.address]));
+    const p = [];
+    if (!mc) p.push("manifest has no solana cluster " + cluster + " (deploy the Gully Core site)");
+    else {
+      p.push(...diffMaps(addr(mc.programs), addr(rec.programs)));
+      if (JSON.stringify(mc.governance) !== JSON.stringify(rec.governance)) p.push("governance differs");
+      if (JSON.stringify(mc.accounts) !== JSON.stringify(rec.accounts)) p.push("accounts differ");
+    }
+    row(`solana-${cluster}`, "SDK Solana record == manifest solana block", p);
+    const dist = join(root, "dist", "solana", "index.js");
+    if (!existsSync(dist)) { row(`solana-${cluster}`, "built Solana book == record", ["dist/ missing: run npm run build"]); continue; }
+    const sb = (await import(pathToFileURL(dist).href)).GULLYCORE_SOLANA_DEPLOYMENTS[cluster];
+    const q = [];
+    if (!sb) q.push("cluster missing from the Solana book");
+    else {
+      q.push(...diffMaps(sb.programs, addr(rec.programs)));
+      if (sb.feeSettings !== rec.accounts.feeSettings) q.push("feeSettings differs");
+      if (sb.governance.upgradeAuthority !== rec.governance.upgradeAuthority) q.push("upgradeAuthority differs");
+    }
+    row(`solana-${cluster}`, "built Solana book == record", q);
   }
   return rows;
 }

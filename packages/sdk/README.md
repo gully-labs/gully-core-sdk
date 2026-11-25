@@ -451,6 +451,22 @@ An address book is a claim, not a proof. Verify with `eth_getCode` before you re
 
 ---
 
+## Solana (devnet)
+
+Gully Core also runs on Solana, **devnet only** (devnet SOL has no value). `@gullylabs/core-sdk/solana` (in the next
+release) has the address book and a read client with the same names as the EVM side. It reads; it never signs or sends.
+
+```ts
+import { requireDeployment, createSolanaRpc, listPools, listLaunches, readChainFeeTerms, GullyCoreSolanaRouterClient } from "@gullylabs/core-sdk/solana";
+
+const d = requireDeployment("devnet");                 // there is no Solana mainnet entry
+const rpc = createSolanaRpc({ url: d.rpc });            // one request in flight; waits out 429s
+const pools = await listPools(rpc, d);                  // Gully CP-Swap pools
+const launches = await listLaunches(rpc, d);            // Gully Launch accounts, newest first
+const terms = await readChainFeeTerms(rpc, d);          // builderFeePips 3000 = 0.30%, as on every EVM chain
+const quote = await new GullyCoreSolanaRouterClient({ url: d.router.url }).quote({ tokenIn: d.wsol, tokenOut: mint, amountIn: 1_000_000n });
+```
+
 ## The differentiator: permissions live in the pool key, not the address
 
 In Uniswap v4, a hook's permissions are read from the **address** of the hook contract. Each callback is a bit of the address, so shipping a hook means grinding a CREATE2 salt until the deployed address happens to carry the right low bits. Change your mind about one callback and you redeploy at a new address.
