@@ -3,6 +3,17 @@
 MIT. Source: <https://github.com/gully-labs/gully-core-sdk>. 0.3.0 is the first release on npm; earlier
 versions were never published.
 
+## Unreleased (proposed 0.3.2, not on npm)
+
+- **`@gullylabs/core-sdk/solana`: Gully Core on Solana devnet.** The Solana address book (`GULLYCORE_SOLANA_DEPLOYMENTS`,
+  `getDeployment("devnet")`, `requireDeployment`, explorer links; a byte copy of the gully-ops record in
+  `records/gully-core-solana-devnet.json`), decoders for the CP-Swap pool, Launch and fee settings accounts, and a
+  dependency-free read client: `createSolanaRpc` (one request in flight, waits out 429s), `readPoolState`,
+  `readPoolReserves`, `listPools`, `readLaunch`, `listLaunches`, `readFeeSettings`, `readChainFeeTerms` and
+  `GullyCoreSolanaRouterClient.quote({ tokenIn, tokenOut, amountIn })` (same names as the EVM SDK). Reads only:
+  nothing signs or sends. There is no Solana mainnet entry.
+- `scripts/sync-check.mjs` also compares the Solana record with the manifest's `solana` block.
+
 ## 0.3.1 (unreleased)
 
 - Package metadata only: the published 0.3.0 `package.json` scripts named `scripts/write-cjs-marker.mjs`,

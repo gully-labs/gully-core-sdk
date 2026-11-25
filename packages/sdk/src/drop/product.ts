@@ -94,7 +94,7 @@ export function buildAirdrop(args: {
   const max = args.max ?? AIRDROP_MAX_RECIPIENTS;
   if (merged.length === 0) throw new RangeError("An airdrop needs at least one recipient with an amount above zero.");
   if (merged.length > max) throw new RangeError(`${merged.length} recipients; an airdrop takes at most ${max}.`);
-  const claimsFile = buildDropClaimsFile({ chainId: args.chainId, currency: args.currency, recipients: merged, symbol: args.symbol, decimals: args.decimals });
+  const claimsFile = buildDropClaimsFile({ chainId: args.chainId, currency: args.currency, recipients: merged, symbol: args.symbol ?? null, decimals: args.decimals ?? null });
   return {
     merkleRoot: claimsFile.merkleRoot,
     total: BigInt(claimsFile.total),
@@ -146,7 +146,7 @@ export interface AirdropCsvResult {
  */
 export function parseAirdropCsv(text: string, decimals: number, opts: { max?: number; approvedTotal?: bigint | null } = {}): AirdropCsvResult {
   const parsed = parseRecipientsCsv(text.replace(/^﻿/, ""), { decimals, duplicates: "error" });
-  const check = checkAirdropList(parsed, { max: opts.max, approvedTotal: opts.approvedTotal ?? undefined });
+  const check = checkAirdropList(parsed, { ...(opts.max !== undefined ? { max: opts.max } : {}), ...(opts.approvedTotal != null ? { approvedTotal: opts.approvedTotal } : {}) });
   const errors: AirdropCsvError[] = [];
   for (const i of parsed.issues) if (i.severity === "error" && !(i.line === 0 && i.message === "No recipients found.")) errors.push({ line: i.line, message: i.message });
   for (const i of parsed.rows) if (i.amount === 0n) errors.push({ line: i.line, message: "The amount must be more than 0" });

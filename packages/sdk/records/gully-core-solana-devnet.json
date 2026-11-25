@@ -1,0 +1,52 @@
+{
+  "family": "solana",
+  "cluster": "devnet",
+  "product": "Gully Core",
+  "version": "0.1.0-devnet",
+  "mode": "broadcast",
+  "deployedAt": "2026-11-11",
+  "source": "The Gully Labs devnet deployment of 2026-11-11 (on-chain facts only)",
+  "upstream": "Raydium CP-Swap (Apache-2.0), forked by Gully Labs; Gully additions are not audited",
+  "programs": {
+    "cpSwap": { "address": "JBguvgwdAn4RexixPqBu8y4hfMzRZi3hm5y5oisnyEzR", "program": "Gully CP-Swap", "role": "Constant-product pools, the builder and kre8 fee tiers, the fee settings account" },
+    "launch": { "address": "7qWhkFQxe58ojmUSUwDh24rFtjmJdscGnp5AUM37SGNa", "program": "Gully Launch", "role": "Token launches: seed pool, anti-snipe schedule, creator tax harvest, launch fee" }
+  },
+  "governance": {
+    "kind": "squads",
+    "multisig": "95GbCxFc7wEMpnvq7ME7Sk8FX86YsBSRWBeVRkFbDv46",
+    "threshold": 2,
+    "members": 3,
+    "upgradeAuthority": "8PFcZhTgnfmnHBwaVkQyMQUQNPD8T7frrmhvNVNJ7dJK",
+    "vaults": {
+      "admin": "8PFcZhTgnfmnHBwaVkQyMQUQNPD8T7frrmhvNVNJ7dJK",
+      "treasury": "6qFWns54ZqgDb8sLH6cPqW8tHqr6qeDJ4Z9zXjc8gEsg"
+    },
+    "note": "Squads 2-of-3 on Solana is what the chain Safe is on the EVM chains: vault 0 is the upgrade authority of both programs and the fee settings admin; vault 1 receives every Gully fee."
+  },
+  "accounts": {
+    "feeSettings": "G3kRG1HAMUcZoCqtzE56QagpocCjgrKm4a3VqC52eA1j",
+    "configs": {
+      "builder": "2VU7HYxokxJEYM9xhwL8njBnikJQG4hHrADZQb3ZKRFf",
+      "kre8": "4vfW7KeiMQ2WwBei9LH4kx67Nd19FLstoXUeww4jsqdy"
+    }
+  },
+  "fees": {
+    "$comment": "What the fee settings account must carry (rates in millionths, like the EVM pips; lamports for the launch fee; seconds). sync-live reads the account and compares each field.",
+    "builderFeeRate": 3000,
+    "builderFeeCap": 4000,
+    "kre8TradeFeeRate": 10000,
+    "kre8CreatorFeeRate": 5000,
+    "creatorTaxShareRate": 100000,
+    "launchFeeLamports": 13800000,
+    "launchFeeUsd": 2,
+    "antiSnipeStartRate": 500000,
+    "antiSnipeDurationSeconds": 60,
+    "raiseNoticeSeconds": 604800
+  },
+  "router": {
+    "devnet": "https://api.gullylabs.xyz/solana-router/devnet",
+    "mainnetQuotes": "https://api.gullylabs.xyz/solana-router/dev",
+    "feeBpsOtherVenues": 15,
+    "feeBpsGullyCorePools": 0
+  }
+}

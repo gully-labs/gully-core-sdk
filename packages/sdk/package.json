@@ -181,6 +181,16 @@
         "default": "./dist/cjs/router/index.js"
       }
     },
+    "./solana": {
+      "import": {
+        "types": "./dist/solana/index.d.ts",
+        "default": "./dist/solana/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/solana/index.d.ts",
+        "default": "./dist/cjs/solana/index.js"
+      }
+    },
     "./schema.graphql": "./schema.graphql",
     "./package.json": "./package.json"
   },
@@ -230,7 +240,8 @@
     "dex",
     "launchpad",
     "gully-chain",
-    "anubis"
+    "anubis",
+    "solana"
   ],
   "dependencies": {
     "viem": "^2.21.0"
