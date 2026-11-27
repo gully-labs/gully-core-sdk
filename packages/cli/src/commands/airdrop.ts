@@ -89,6 +89,23 @@ async function tokenOf(ctx: ChainContext | null, token: string, decimalsFlag: st
   return { address: meta.address, symbol: meta.symbol, decimals: meta.decimals };
 }
 
+/** Longest drop the factory takes, in days (`MAX_DURATION`). */
+export const AIRDROP_MAX_DAYS = 1825;
+/**
+ * Head room added to a drop's expiry, in seconds. The factory checks `expiresAt >= block.timestamp + 1 day`
+ * when `createDrop` is MINED, which is later than the block this command read (an approval is sent first),
+ * so "exactly 1 day from the latest block" always reverted with `InvalidExpiry`: `--days 1` could never
+ * create a drop, and its approval had already been sent.
+ */
+export const AIRDROP_EXPIRY_HEADROOM_SECONDS = 900n;
+
+/** `--days` from the latest block's time, with head room, never past the factory's maximum. */
+export function dropExpiresAt(nowSeconds: bigint, days: number): bigint {
+  const plain = nowSeconds + BigInt(days) * 86_400n;
+  /* At the maximum there is no room above: the plain value is already inside the limit when it is mined. */
+  return days >= AIRDROP_MAX_DAYS ? plain : plain + AIRDROP_EXPIRY_HEADROOM_SECONDS;
+}
+
 export async function runAirdrop(argv: readonly string[]): Promise<number> {
   const [sub, ...rest] = argv;
   if (sub === undefined || !["build", "create", "verify", "claim"].includes(sub)) {
@@ -170,9 +187,9 @@ export async function runAirdrop(argv: readonly string[]): Promise<number> {
   }
 
   /* create */
-  const days = parseIntStrict(cmd.str("days") ?? "30", "days", 1, 1825);
+  const days = parseIntStrict(cmd.str("days") ?? "30", "days", 1, AIRDROP_MAX_DAYS);
   const now = (await ctx.client.getBlock()).timestamp;
-  const expiresAt = now + BigInt(days) * 86_400n;
+  const expiresAt = dropExpiresAt(now, days);
   const amount = BigInt(file.total);
   const metadata = cmd.str("metadata") ?? "";
   const issues = validateDropDraft({ amount, merkleRoot: file.merkleRoot, expiresAt, metadataURI: metadata, nowSeconds: now });

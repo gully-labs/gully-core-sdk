@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { concat, encodeAbiParameters, getAddress, keccak256, type Hex } from "viem";
 import { afterAll, describe, expect, it, vi } from "vitest";
 
-import { runAirdrop } from "../src/commands/airdrop.js";
+import { AIRDROP_EXPIRY_HEADROOM_SECONDS, AIRDROP_MAX_DAYS, dropExpiresAt, runAirdrop } from "../src/commands/airdrop.js";
 
 /**
  * An independent Merkle builder written from GullyCoreMerkleDrop's NatSpec — OpenZeppelin's double-hashed
@@ -91,5 +91,30 @@ describe("gullycore airdrop build", () => {
     } finally {
       err.mockRestore();
     }
+  });
+});
+
+describe("airdrop create: the expiry survives the blocks between reading the clock and mining", () => {
+  const DAY = 86_400n;
+  const MAX = BigInt(AIRDROP_MAX_DAYS) * DAY;
+  /** GullyCoreDropFactory.createDrop's own check, at the block that mines it. */
+  const factoryAccepts = (expiresAt: bigint, minedAt: bigint): boolean => expiresAt >= minedAt + DAY && expiresAt <= minedAt + MAX;
+
+  it("--days 1 is still valid when createDrop is mined minutes after the clock was read", () => {
+    const read = 1_795_810_744n;
+    /* Seen on Gully Chain testnet 2026-11-27: expiresAt = read + 1 day reverted InvalidExpiry one block later. */
+    expect(factoryAccepts(read + DAY, read + 1n)).toBe(false);
+    for (const late of [0n, 1n, 60n, 600n]) expect(factoryAccepts(dropExpiresAt(read, 1), read + late)).toBe(true);
+  });
+
+  it("the maximum stays inside the factory's limit, whenever it is mined", () => {
+    const read = 1_795_810_744n;
+    for (const late of [0n, 1n, 600n]) expect(factoryAccepts(dropExpiresAt(read, AIRDROP_MAX_DAYS), read + late)).toBe(true);
+    expect(dropExpiresAt(read, AIRDROP_MAX_DAYS)).toBe(read + MAX);
+  });
+
+  it("every other length gets the same head room and no more", () => {
+    expect(dropExpiresAt(1000n, 30)).toBe(1000n + 30n * DAY + AIRDROP_EXPIRY_HEADROOM_SECONDS);
+    expect(factoryAccepts(dropExpiresAt(1000n, AIRDROP_MAX_DAYS - 1), 1000n)).toBe(true);
   });
 });
